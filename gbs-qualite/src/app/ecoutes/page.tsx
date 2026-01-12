@@ -124,17 +124,22 @@ export default function EcoutesPage() {
     }
 
     if (editingEcoute) {
+      const updatedEcoute: Ecoute = {
+        ...editingEcoute,
+        agent_id: formData.agent_id,
+        date_prise_rdv: formData.date_prise_rdv,
+        date_rdv: formData.date_rdv,
+        statut_rdv: formData.statut_rdv,
+        rdv_qualite: formData.rdv_qualite,
+        rdv_honore: formData.rdv_honore,
+        note_globale: formData.note_globale,
+        remarques: formData.remarques || null,
+        audio_data: audioData || editingEcoute.audio_data,
+        audio_name: audioName || editingEcoute.audio_name,
+        lien_audio: audioName || editingEcoute.lien_audio || null
+      }
       setEcoutes(ecoutes.map(ec => 
-        ec.id === editingEcoute.id 
-          ? { 
-              ...ec, 
-              ...formData, 
-              audio_data: audioData,
-              audio_name: audioName,
-              lien_audio: audioName || formData.lien_audio || null, 
-              remarques: formData.remarques || null 
-            }
-          : ec
+        ec.id === editingEcoute.id ? updatedEcoute : ec
       ))
     } else {
       const newEcoute: Ecoute = {
