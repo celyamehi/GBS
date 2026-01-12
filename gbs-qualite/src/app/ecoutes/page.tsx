@@ -21,6 +21,8 @@ export default function EcoutesPage() {
   const [formData, setFormData] = useState({
     agent_id: '',
     lien_audio: '',
+    audio_data: '' as string | null,
+    audio_name: '' as string | null,
     date_prise_rdv: '',
     date_rdv: '',
     statut_rdv: STATUTS_RDV[0],
@@ -33,6 +35,15 @@ export default function EcoutesPage() {
   const [criteres, setCriteres] = useState<Record<string, { respecte: boolean; commentaire: string }>>({})
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
+  }
 
   const activeAgents = agents.filter(a => a.actif)
 
@@ -65,6 +76,8 @@ export default function EcoutesPage() {
       setFormData({
         agent_id: ecoute.agent_id,
         lien_audio: ecoute.lien_audio || '',
+        audio_data: ecoute.audio_data || null,
+        audio_name: ecoute.audio_name || null,
         date_prise_rdv: ecoute.date_prise_rdv,
         date_rdv: ecoute.date_rdv,
         statut_rdv: ecoute.statut_rdv,
@@ -73,11 +86,17 @@ export default function EcoutesPage() {
         note_globale: ecoute.note_globale,
         remarques: ecoute.remarques || ''
       })
+      // Si l'écoute a un audio stocké, créer l'URL pour le lecteur
+      if (ecoute.audio_data) {
+        setAudioUrl(ecoute.audio_data)
+      }
     } else {
       setEditingEcoute(null)
       setFormData({
         agent_id: activeAgents[0]?.id || '',
         lien_audio: '',
+        audio_data: null,
+        audio_name: null,
         date_prise_rdv: new Date().toISOString().split('T')[0],
         date_rdv: '',
         statut_rdv: STATUTS_RDV[0],
@@ -91,21 +110,45 @@ export default function EcoutesPage() {
     setIsModalOpen(true)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.agent_id || !formData.date_prise_rdv || !formData.date_rdv) return
+
+    let audioData = formData.audio_data
+    let audioName = formData.audio_name
+
+    // Si un nouveau fichier audio a été uploadé, le convertir en base64
+    if (audioFile) {
+      audioData = await fileToBase64(audioFile)
+      audioName = audioFile.name
+    }
 
     if (editingEcoute) {
       setEcoutes(ecoutes.map(ec => 
         ec.id === editingEcoute.id 
-          ? { ...ec, ...formData, lien_audio: formData.lien_audio || null, remarques: formData.remarques || null }
+          ? { 
+              ...ec, 
+              ...formData, 
+              audio_data: audioData,
+              audio_name: audioName,
+              lien_audio: audioName || formData.lien_audio || null, 
+              remarques: formData.remarques || null 
+            }
           : ec
       ))
     } else {
       const newEcoute: Ecoute = {
         id: Date.now().toString(),
-        ...formData,
-        lien_audio: formData.lien_audio || null,
+        agent_id: formData.agent_id,
+        lien_audio: audioName || formData.lien_audio || null,
+        audio_data: audioData,
+        audio_name: audioName,
+        date_prise_rdv: formData.date_prise_rdv,
+        date_rdv: formData.date_rdv,
+        statut_rdv: formData.statut_rdv,
+        rdv_qualite: formData.rdv_qualite,
+        rdv_honore: formData.rdv_honore,
+        note_globale: formData.note_globale,
         remarques: formData.remarques || null,
         created_at: new Date().toISOString()
       }
@@ -272,7 +315,7 @@ export default function EcoutesPage() {
               </div>
             </div>
             
-            {!audioFile && !formData.lien_audio ? (
+            {!audioFile && !formData.audio_data && !formData.audio_name ? (
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#7c3aed] rounded-xl cursor-pointer bg-white hover:bg-[#faf9f7] transition-colors">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-8 h-8 text-[#7c3aed] mb-2" />
@@ -305,12 +348,14 @@ export default function EcoutesPage() {
                     </div>
                     <div>
                       <p className="font-medium text-[#1a1a2e] text-sm">
-                        {audioFile?.name || formData.lien_audio}
+                        {audioFile?.name || formData.audio_name || 'Audio enregistré'}
                       </p>
-                      {audioFile && (
+                      {audioFile ? (
                         <p className="text-xs text-[#6b7280]">
                           {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
                         </p>
+                      ) : formData.audio_data && (
+                        <p className="text-xs text-[#10b981]">Audio disponible</p>
                       )}
                     </div>
                   </div>
@@ -318,9 +363,9 @@ export default function EcoutesPage() {
                     type="button"
                     onClick={() => {
                       setAudioFile(null)
-                      if (audioUrl) URL.revokeObjectURL(audioUrl)
+                      if (audioUrl && !formData.audio_data) URL.revokeObjectURL(audioUrl)
                       setAudioUrl(null)
-                      setFormData({ ...formData, lien_audio: '' })
+                      setFormData({ ...formData, lien_audio: '', audio_data: null, audio_name: null })
                     }}
                     className="p-2 rounded-lg hover:bg-[#ffd6e0] transition-colors"
                   >
