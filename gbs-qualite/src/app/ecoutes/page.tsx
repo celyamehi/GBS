@@ -91,7 +91,8 @@ export default function EcoutesPage() {
         setAudioUrl(ecoute.audio_data)
       }
       // Restaurer les critères sauvegardés ou initialiser
-      if (ecoute.criteres) {
+      console.log('Ecoute criteres:', ecoute.criteres)
+      if (ecoute.criteres && Object.keys(ecoute.criteres).length > 0) {
         setCriteres(ecoute.criteres)
       } else {
         setCriteres(initCriteres())
@@ -130,6 +131,7 @@ export default function EcoutesPage() {
     }
 
     if (editingEcoute) {
+      console.log('Saving criteres:', criteres)
       const updatedEcoute: Ecoute = {
         ...editingEcoute,
         agent_id: formData.agent_id,
@@ -143,7 +145,7 @@ export default function EcoutesPage() {
         audio_data: audioData || editingEcoute.audio_data,
         audio_name: audioName || editingEcoute.audio_name,
         lien_audio: audioName || editingEcoute.lien_audio || null,
-        criteres: criteres
+        criteres: { ...criteres }
       }
       setEcoutes(ecoutes.map(ec => 
         ec.id === editingEcoute.id ? updatedEcoute : ec
@@ -162,9 +164,10 @@ export default function EcoutesPage() {
         rdv_honore: formData.rdv_honore,
         note_globale: formData.note_globale,
         remarques: formData.remarques || null,
-        criteres: criteres,
+        criteres: { ...criteres },
         created_at: new Date().toISOString()
       }
+      console.log('New ecoute with criteres:', newEcoute)
       setEcoutes([...ecoutes, newEcoute])
     }
     setIsModalOpen(false)
