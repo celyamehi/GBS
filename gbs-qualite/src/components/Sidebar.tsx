@@ -9,12 +9,14 @@ import {
   CalendarCheck, 
   MessageSquare, 
   BarChart3,
-  Sparkles
+  Sparkles,
+  PieChart
 } from 'lucide-react'
 
 const navItems = [
   { href: '/agents', label: 'Agents', icon: Users },
   { href: '/ecoutes', label: 'Écoutes / RDV', icon: Headphones },
+  { href: '/analyse', label: 'Analyse', icon: PieChart },
   { href: '/classement', label: 'Classement', icon: Trophy },
   { href: '/suivi-rdv', label: 'Suivi RDV', icon: CalendarCheck },
   { href: '/briefings', label: 'Briefings IA', icon: MessageSquare },

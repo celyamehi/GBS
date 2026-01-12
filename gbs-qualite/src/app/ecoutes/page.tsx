@@ -485,13 +485,32 @@ export default function EcoutesPage() {
           <div className="border-t border-[#e8e8e8] pt-6">
             <h3 className="text-lg font-semibold text-[#1a1a2e] mb-4">Grille d'évaluation</h3>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {Object.entries(BLOCS_CRITERES).map(([blocKey, bloc]) => (
+              {Object.entries(BLOCS_CRITERES).map(([blocKey, bloc]) => {
+                const allChecked = bloc.criteres.every(critere => criteres[`${blocKey}_${critere}`]?.respecte)
+                const toggleAll = (checked: boolean) => {
+                  const newCriteres = { ...criteres }
+                  bloc.criteres.forEach(critere => {
+                    const key = `${blocKey}_${critere}`
+                    newCriteres[key] = { ...newCriteres[key], respecte: checked }
+                  })
+                  setCriteres(newCriteres)
+                }
+                return (
                 <div key={blocKey} className="criteria-block">
                   <div 
-                    className="criteria-header"
+                    className="criteria-header flex items-center justify-between"
                     style={{ backgroundColor: bloc.couleur }}
                   >
-                    {bloc.titre}
+                    <span>{bloc.titre}</span>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-normal">
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={(e) => toggleAll(e.target.checked)}
+                        className="checkbox-custom"
+                      />
+                      Tout cocher
+                    </label>
                   </div>
                   {bloc.criteres.map(critere => {
                     const key = `${blocKey}_${critere}`
@@ -521,7 +540,7 @@ export default function EcoutesPage() {
                     )
                   })}
                 </div>
-              ))}
+              )})}
             </div>
           </div>
 
