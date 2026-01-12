@@ -90,6 +90,12 @@ export default function EcoutesPage() {
       if (ecoute.audio_data) {
         setAudioUrl(ecoute.audio_data)
       }
+      // Restaurer les critères sauvegardés ou initialiser
+      if (ecoute.criteres) {
+        setCriteres(ecoute.criteres)
+      } else {
+        setCriteres(initCriteres())
+      }
     } else {
       setEditingEcoute(null)
       setFormData({
@@ -105,8 +111,8 @@ export default function EcoutesPage() {
         note_globale: 5,
         remarques: ''
       })
+      setCriteres(initCriteres())
     }
-    setCriteres(initCriteres())
     setIsModalOpen(true)
   }
 
@@ -136,7 +142,8 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         audio_data: audioData || editingEcoute.audio_data,
         audio_name: audioName || editingEcoute.audio_name,
-        lien_audio: audioName || editingEcoute.lien_audio || null
+        lien_audio: audioName || editingEcoute.lien_audio || null,
+        criteres: criteres
       }
       setEcoutes(ecoutes.map(ec => 
         ec.id === editingEcoute.id ? updatedEcoute : ec
@@ -155,6 +162,7 @@ export default function EcoutesPage() {
         rdv_honore: formData.rdv_honore,
         note_globale: formData.note_globale,
         remarques: formData.remarques || null,
+        criteres: criteres,
         created_at: new Date().toISOString()
       }
       setEcoutes([...ecoutes, newEcoute])

@@ -57,6 +57,7 @@ export const mockEcoutes: Ecoute[] = [
     rdv_honore: true,
     note_globale: 8,
     remarques: 'Très bon appel, bonne maîtrise du script',
+    criteres: null,
     created_at: '2024-01-20T14:30:00Z'
   },
   {
@@ -72,6 +73,7 @@ export const mockEcoutes: Ecoute[] = [
     rdv_honore: false,
     note_globale: 5,
     remarques: 'Question clé oubliée, reformulation absente',
+    criteres: null,
     created_at: '2024-01-21T09:15:00Z'
   },
   {
@@ -87,6 +89,7 @@ export const mockEcoutes: Ecoute[] = [
     rdv_honore: true,
     note_globale: 9,
     remarques: 'Excellent, très professionnel',
+    criteres: null,
     created_at: '2024-01-22T11:00:00Z'
   },
   {
@@ -102,6 +105,7 @@ export const mockEcoutes: Ecoute[] = [
     rdv_honore: null,
     note_globale: 7,
     remarques: 'Bon appel mais peut améliorer la sécurisation',
+    criteres: null,
     created_at: '2024-01-22T15:45:00Z'
   },
   {
@@ -117,6 +121,7 @@ export const mockEcoutes: Ecoute[] = [
     rdv_honore: false,
     note_globale: 4,
     remarques: 'Mauvaise gestion des objections',
+    criteres: null,
     created_at: '2024-01-23T10:30:00Z'
   }
 ]

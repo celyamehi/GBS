@@ -27,6 +27,7 @@ export type Ecoute = {
   rdv_honore: boolean | null
   note_globale: number
   remarques: string | null
+  criteres: Record<string, { respecte: boolean; commentaire: string }> | null
   created_at: string
   agent?: Agent
 }
