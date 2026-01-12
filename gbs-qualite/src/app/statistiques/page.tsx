@@ -1,38 +1,46 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { BarChart3, TrendingUp, Users, Calendar, CheckCircle, XCircle } from 'lucide-react'
+import { TrendingUp, Calendar, CheckCircle, XCircle } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
-import { mockAgents, mockEcoutes, PROJETS } from '@/data/mockData'
+import { mockAgents, mockEcoutes } from '@/data/mockData'
 import { Agent, Ecoute } from '@/lib/supabase'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 export default function StatistiquesPage() {
   const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
   const [ecoutes] = useLocalStorage<Ecoute[]>('gbs-ecoutes', mockEcoutes)
-  const [filterProjet, setFilterProjet] = useState('')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
 
+  // Obtenir le mois en cours au format YYYY-MM
+  const currentMonth = new Date().toISOString().substring(0, 7)
+  const currentMonthName = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+
+  // Écoutes filtrées par date (pour la vue par agent)
   const filteredEcoutes = useMemo(() => {
     return ecoutes.filter(ecoute => {
-      const agent = agents.find(a => a.id === ecoute.agent_id)
-      const matchesProjet = !filterProjet || agent?.projet === filterProjet
       const matchesDateDebut = !dateDebut || ecoute.date_rdv >= dateDebut
       const matchesDateFin = !dateFin || ecoute.date_rdv <= dateFin
-      return matchesProjet && matchesDateDebut && matchesDateFin
+      return matchesDateDebut && matchesDateFin
     })
-  }, [ecoutes, agents, filterProjet, dateDebut, dateFin])
+  }, [ecoutes, dateDebut, dateFin])
 
+  // Écoutes du mois en cours (pour la vue globale)
+  const currentMonthEcoutes = useMemo(() => {
+    return ecoutes.filter(ecoute => ecoute.date_rdv.substring(0, 7) === currentMonth)
+  }, [ecoutes, currentMonth])
+
+  // Stats du mois en cours (vue globale)
   const globalStats = useMemo(() => {
-    const total = filteredEcoutes.length
-    const qualite = filteredEcoutes.filter(e => e.rdv_qualite).length
+    const total = currentMonthEcoutes.length
+    const qualite = currentMonthEcoutes.filter(e => e.rdv_qualite).length
     const nonQualite = total - qualite
-    const annules = filteredEcoutes.filter(e => e.statut_rdv === 'Annulé').length
-    const honores = filteredEcoutes.filter(e => e.rdv_honore === true).length
-    const nonHonores = filteredEcoutes.filter(e => e.rdv_honore === false).length
+    const annules = currentMonthEcoutes.filter(e => e.statut_rdv === 'Annulé').length
+    const honores = currentMonthEcoutes.filter(e => e.rdv_honore === true).length
+    const nonHonores = currentMonthEcoutes.filter(e => e.rdv_honore === false).length
 
     return {
       total,
@@ -44,14 +52,10 @@ export default function StatistiquesPage() {
       nonHonores,
       tauxHonore: (honores + nonHonores) > 0 ? (honores / (honores + nonHonores)) * 100 : 0
     }
-  }, [filteredEcoutes])
+  }, [currentMonthEcoutes])
 
   const agentStats = useMemo(() => {
-    const activeAgents = agents.filter(a => {
-      if (!a.actif) return false
-      if (filterProjet && a.projet !== filterProjet) return false
-      return true
-    })
+    const activeAgents = agents.filter(a => a.actif)
 
     return activeAgents.map(agent => {
       const agentEcoutes = filteredEcoutes.filter(e => e.agent_id === agent.id)
@@ -77,7 +81,7 @@ export default function StatistiquesPage() {
         noteMoyenne
       }
     }).sort((a, b) => b.tauxQualite - a.tauxQualite)
-  }, [agents, filteredEcoutes, filterProjet])
+  }, [agents, filteredEcoutes])
 
   const selectedAgentData = useMemo(() => {
     if (!selectedAgent) return null
@@ -120,19 +124,6 @@ export default function StatistiquesPage() {
       <div className="card p-6 mb-6">
         <div className="flex flex-wrap gap-4">
           <div className="w-48">
-            <label className="block text-sm font-medium text-[#6b7280] mb-2">Projet</label>
-            <select
-              value={filterProjet}
-              onChange={(e) => setFilterProjet(e.target.value)}
-              className="input-field"
-            >
-              <option value="">Tous les projets</option>
-              {PROJETS.map(projet => (
-                <option key={projet} value={projet}>{projet}</option>
-              ))}
-            </select>
-          </div>
-          <div className="w-48">
             <label className="block text-sm font-medium text-[#6b7280] mb-2">Date début</label>
             <input
               type="date"
@@ -151,9 +142,14 @@ export default function StatistiquesPage() {
             />
           </div>
         </div>
+        <p className="text-sm text-[#6b7280] mt-3">
+          Les filtres de date s'appliquent à la vue par agent. La vue globale affiche les stats du mois en cours.
+        </p>
       </div>
 
-      <h2 className="text-lg font-semibold text-[#1a1a2e] mb-4">Vue globale</h2>
+      <h2 className="text-lg font-semibold text-[#1a1a2e] mb-4">
+        Vue globale - {currentMonthName}
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard 
           label="Total RDV"
@@ -246,7 +242,6 @@ export default function StatistiquesPage() {
             <thead>
               <tr>
                 <th>Agent</th>
-                <th>Projet</th>
                 <th className="text-center">Total</th>
                 <th className="text-center">Qualité</th>
                 <th className="text-center">Taux Qualité</th>
@@ -258,7 +253,7 @@ export default function StatistiquesPage() {
             <tbody>
               {agentStats.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={7} className="text-center py-8 text-[#6b7280]">
                     Aucune donnée disponible
                   </td>
                 </tr>
@@ -270,9 +265,6 @@ export default function StatistiquesPage() {
                     onClick={() => setSelectedAgent(selectedAgent === stat.agent.id ? null : stat.agent.id)}
                   >
                     <td className="font-medium">{stat.agent.nom}</td>
-                    <td>
-                      <span className="badge badge-info">{stat.agent.projet}</span>
-                    </td>
                     <td className="text-center font-semibold">{stat.total}</td>
                     <td className="text-center">
                       <span className="text-[#10b981]">{stat.qualite}</span>

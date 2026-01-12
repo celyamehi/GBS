@@ -112,8 +112,6 @@ export const BLOCS_CRITERES = {
 
 export const STATUTS_RDV = [
   'Validé qualité',
-  'Annulé',
-  'En attente',
-  'Reporté',
-  'Non qualifié'
+  '2ème passage',
+  'Annulé'
 ]

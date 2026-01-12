@@ -470,33 +470,6 @@ export default function EcoutesPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="rdv_qualite"
-                checked={formData.rdv_qualite}
-                onChange={(e) => setFormData({ ...formData, rdv_qualite: e.target.checked })}
-                className="checkbox-custom"
-              />
-              <label htmlFor="rdv_qualite" className="text-sm font-medium text-[#1a1a2e]">
-                RDV Qualité
-              </label>
-            </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="rdv_honore"
-                checked={formData.rdv_honore === true}
-                onChange={(e) => setFormData({ ...formData, rdv_honore: e.target.checked ? true : null })}
-                className="checkbox-custom"
-              />
-              <label htmlFor="rdv_honore" className="text-sm font-medium text-[#1a1a2e]">
-                RDV Honoré
-              </label>
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
               Remarques qualiticienne
