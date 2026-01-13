@@ -181,6 +181,12 @@ export default function EcoutesPage() {
     return new Date(dateStr).toLocaleDateString('fr-FR')
   }
 
+  const toggleQualite = (ecouteId: string) => {
+    setEcoutes(ecoutes.map(ec => 
+      ec.id === ecouteId ? { ...ec, rdv_qualite: !ec.rdv_qualite } : ec
+    ))
+  }
+
   return (
     <div className="animate-fade-in">
       <PageHeader 
@@ -275,9 +281,13 @@ export default function EcoutesPage() {
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${ecoute.rdv_qualite ? 'badge-success' : 'badge-danger'}`}>
+                      <button
+                        onClick={() => toggleQualite(ecoute.id)}
+                        className={`badge cursor-pointer hover:opacity-80 transition-opacity ${ecoute.rdv_qualite ? 'badge-success' : 'badge-danger'}`}
+                        title="Cliquer pour changer"
+                      >
                         {ecoute.rdv_qualite ? 'Qualité' : 'Non qualité'}
-                      </span>
+                      </button>
                     </td>
                     <td>
                       <span className="font-semibold text-[#7c3aed]">{ecoute.note_globale}/10</span>

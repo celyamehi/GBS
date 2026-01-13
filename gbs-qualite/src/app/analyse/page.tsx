@@ -35,7 +35,9 @@ export default function AnalysePage() {
       tauxGlobal: number
     }> = {}
 
-    Object.entries(BLOCS_CRITERES).forEach(([blocKey, bloc]) => {
+    Object.entries(BLOCS_CRITERES)
+      .filter(([blocKey]) => blocKey !== 'gestion_objections')
+      .forEach(([blocKey, bloc]) => {
       const criteresAnalyse: Record<string, { total: number; respecte: number; taux: number }> = {}
       
       bloc.criteres.forEach(critere => {
