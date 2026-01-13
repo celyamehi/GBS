@@ -58,46 +58,19 @@ export default function BriefingsPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleGenerateBriefing = async () => {
+  const handleSaveManualBriefing = async () => {
     if (!newBriefingData.agent_id || !newBriefingData.remarques) return
     
-    setIsGenerating(true)
-    
-    const agent = agents.find(a => a.id === newBriefingData.agent_id)
-    
-    const generatedContent = `**Briefing pour ${agent?.nom || 'Agent'} - ${formatDate(new Date().toISOString().split('T')[0])}**
-
-**Basé sur vos remarques :**
-${newBriefingData.remarques}
-
-**Axes prioritaires de travail :**
-1. **Amélioration de la découverte** - Approfondir les questions sur les besoins du prospect
-2. **Reformulation systématique** - Valider la compréhension avant de proposer
-3. **Gestion des objections** - Préparer des réponses adaptées aux objections fréquentes
-4. **Sécurisation du RDV** - Renforcer la confirmation avec rappel des bénéfices
-
-**Exemples de formulations :**
-- "Si je comprends bien, vous recherchez une mutuelle qui couvre particulièrement..."
-- "Qu'est-ce qui est le plus important pour vous en matière de santé ?"
-- "Je comprends votre hésitation, permettez-moi de vous expliquer..."
-
-**Consignes concrètes :**
-- Prendre des notes pendant l'appel
-- Utiliser le prénom du prospect
-- Terminer sur une note positive
-- Confirmer le RDV avec tous les détails`
-
     const newBriefing: Briefing = {
       id: Date.now().toString(),
       agent_id: newBriefingData.agent_id,
       date_briefing: new Date().toISOString().split('T')[0],
       type: 'manuel',
-      contenu: generatedContent,
+      contenu: newBriefingData.remarques,
       created_at: new Date().toISOString()
     }
 
     setBriefings([newBriefing, ...briefings])
-    setIsGenerating(false)
     setIsModalOpen(false)
     setNewBriefingData({ agent_id: '', remarques: '' })
     
@@ -270,13 +243,13 @@ Maintenir un taux de qualité élevé et sécuriser les RDV pris.`,
           </div>
           <div>
             <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
-              Remarques / Points à aborder *
+              Contenu du briefing *
             </label>
             <textarea
               value={newBriefingData.remarques}
               onChange={(e) => setNewBriefingData({ ...newBriefingData, remarques: e.target.value })}
-              className="input-field min-h-[150px]"
-              placeholder="Décrivez les points à améliorer, les erreurs observées, les axes de travail..."
+              className="input-field min-h-[200px]"
+              placeholder="Écrivez le contenu du briefing pour l'agent..."
             />
           </div>
           <div className="flex justify-end gap-3 pt-4">
@@ -288,12 +261,11 @@ Maintenir un taux de qualité élevé et sécuriser les RDV pris.`,
               Annuler
             </button>
             <button 
-              onClick={handleGenerateBriefing}
-              disabled={isGenerating || !newBriefingData.agent_id || !newBriefingData.remarques}
+              onClick={handleSaveManualBriefing}
+              disabled={!newBriefingData.agent_id || !newBriefingData.remarques}
               className="btn-primary flex items-center gap-2"
             >
-              <Sparkles className="w-4 h-4" />
-              {isGenerating ? 'Génération...' : 'Générer le briefing'}
+              Enregistrer le briefing
             </button>
           </div>
         </div>
