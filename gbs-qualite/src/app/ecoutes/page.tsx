@@ -7,6 +7,7 @@ import Modal from '@/components/Modal'
 import { mockAgents, mockEcoutes, PROJETS } from '@/data/mockData'
 import { Agent, Ecoute, BLOCS_CRITERES, STATUTS_RDV } from '@/lib/supabase'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { uploadAudioFile } from '@/lib/storage'
 import Link from 'next/link'
 
 export default function EcoutesPage() {
@@ -35,7 +36,7 @@ export default function EcoutesPage() {
   const [criteres, setCriteres] = useState<Record<string, { respecte: boolean; commentaire: string }>>({})
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [audioFiles, setAudioFiles] = useState<Map<string, File>>(new Map())
+  const [isUploading, setIsUploading] = useState(false)
 
   const activeAgents = agents.filter(a => a.actif)
 
@@ -79,10 +80,9 @@ export default function EcoutesPage() {
         remarques: ecoute.remarques || ''
       })
       setAudioFile(null)
-      const storedFile = audioFiles.get(ecoute.id)
-      if (storedFile) {
-        const url = URL.createObjectURL(storedFile)
-        setAudioUrl(url)
+      // Si l'écoute a un lien audio Supabase, l'utiliser directement
+      if (ecoute.lien_audio) {
+        setAudioUrl(ecoute.lien_audio)
       } else {
         setAudioUrl(null)
       }
@@ -117,15 +117,22 @@ export default function EcoutesPage() {
     e.preventDefault()
     if (!formData.agent_id || !formData.date_prise_rdv || !formData.date_rdv) return
 
+    setIsUploading(true)
+    let audioUrl = formData.lien_audio
     let audioName = formData.audio_name
     const ecouteId = editingEcoute?.id || Date.now().toString()
 
-    // Si un nouveau fichier audio a été uploadé, le stocker en mémoire
+    // Si un nouveau fichier audio a été uploadé, l'uploader vers Supabase Storage
     if (audioFile) {
-      audioName = audioFile.name
-      const newAudioFiles = new Map(audioFiles)
-      newAudioFiles.set(ecouteId, audioFile)
-      setAudioFiles(newAudioFiles)
+      const uploadedUrl = await uploadAudioFile(audioFile, ecouteId)
+      if (uploadedUrl) {
+        audioUrl = uploadedUrl
+        audioName = audioFile.name
+      } else {
+        alert('Erreur lors de l\'upload du fichier audio. Vérifiez votre configuration Supabase.')
+        setIsUploading(false)
+        return
+      }
     }
 
     if (editingEcoute) {
@@ -141,7 +148,7 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         audio_data: null,
         audio_name: audioName || editingEcoute.audio_name,
-        lien_audio: audioName || editingEcoute.lien_audio || null,
+        lien_audio: audioUrl || editingEcoute.lien_audio || null,
         criteres: { ...criteres }
       }
       setEcoutes(ecoutes.map(ec => 
@@ -151,7 +158,7 @@ export default function EcoutesPage() {
       const newEcoute: Ecoute = {
         id: ecouteId,
         agent_id: formData.agent_id,
-        lien_audio: audioName || formData.lien_audio || null,
+        lien_audio: audioUrl || null,
         audio_data: null,
         audio_name: audioName,
         date_prise_rdv: formData.date_prise_rdv,
@@ -166,6 +173,8 @@ export default function EcoutesPage() {
       }
       setEcoutes([...ecoutes, newEcoute])
     }
+    
+    setIsUploading(false)
     setIsModalOpen(false)
   }
 
@@ -337,9 +346,9 @@ export default function EcoutesPage() {
               </div>
             </div>
             
-            <div className="mb-2 p-3 bg-[#fff3cd] border border-[#ffc107] rounded-lg">
-              <p className="text-xs text-[#856404]">
-                ⚠️ Les fichiers audio sont stockés temporairement pendant votre session. Pour un stockage permanent, configurez Supabase Storage.
+            <div className="mb-2 p-3 bg-[#d1f4e0] border border-[#10b981] rounded-lg">
+              <p className="text-xs text-[#065f46]">
+                ✓ Les fichiers audio sont stockés dans Supabase Storage de manière permanente.
               </p>
             </div>
             
@@ -563,8 +572,12 @@ export default function EcoutesPage() {
             >
               Annuler
             </button>
-            <button type="submit" className="btn-primary">
-              {editingEcoute ? 'Enregistrer' : 'Créer l\'écoute'}
+            <button 
+              type="submit" 
+              className="btn-primary"
+              disabled={isUploading}
+            >
+              {isUploading ? 'Upload en cours...' : (editingEcoute ? 'Enregistrer' : 'Créer l\'écoute')}
             </button>
           </div>
         </form>
