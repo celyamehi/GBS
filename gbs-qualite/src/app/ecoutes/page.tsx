@@ -35,15 +35,7 @@ export default function EcoutesPage() {
   const [criteres, setCriteres] = useState<Record<string, { respecte: boolean; commentaire: string }>>({})
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = error => reject(error)
-    })
-  }
+  const [audioFiles, setAudioFiles] = useState<Map<string, File>>(new Map())
 
   const activeAgents = agents.filter(a => a.actif)
 
@@ -76,7 +68,7 @@ export default function EcoutesPage() {
       setFormData({
         agent_id: ecoute.agent_id,
         lien_audio: ecoute.lien_audio || '',
-        audio_data: ecoute.audio_data || null,
+        audio_data: null,
         audio_name: ecoute.audio_name || null,
         date_prise_rdv: ecoute.date_prise_rdv,
         date_rdv: ecoute.date_rdv,
@@ -86,9 +78,13 @@ export default function EcoutesPage() {
         note_globale: ecoute.note_globale,
         remarques: ecoute.remarques || ''
       })
-      // Si l'écoute a un audio stocké, créer l'URL pour le lecteur
-      if (ecoute.audio_data) {
-        setAudioUrl(ecoute.audio_data)
+      setAudioFile(null)
+      const storedFile = audioFiles.get(ecoute.id)
+      if (storedFile) {
+        const url = URL.createObjectURL(storedFile)
+        setAudioUrl(url)
+      } else {
+        setAudioUrl(null)
       }
       // Restaurer les critères sauvegardés ou initialiser
       console.log('Ecoute criteres:', ecoute.criteres)
@@ -121,17 +117,18 @@ export default function EcoutesPage() {
     e.preventDefault()
     if (!formData.agent_id || !formData.date_prise_rdv || !formData.date_rdv) return
 
-    let audioData = formData.audio_data
     let audioName = formData.audio_name
+    const ecouteId = editingEcoute?.id || Date.now().toString()
 
-    // Si un nouveau fichier audio a été uploadé, le convertir en base64
+    // Si un nouveau fichier audio a été uploadé, le stocker en mémoire
     if (audioFile) {
-      audioData = await fileToBase64(audioFile)
       audioName = audioFile.name
+      const newAudioFiles = new Map(audioFiles)
+      newAudioFiles.set(ecouteId, audioFile)
+      setAudioFiles(newAudioFiles)
     }
 
     if (editingEcoute) {
-      console.log('Saving criteres:', criteres)
       const updatedEcoute: Ecoute = {
         ...editingEcoute,
         agent_id: formData.agent_id,
@@ -142,7 +139,7 @@ export default function EcoutesPage() {
         rdv_honore: formData.rdv_honore,
         note_globale: formData.note_globale,
         remarques: formData.remarques || null,
-        audio_data: audioData || editingEcoute.audio_data,
+        audio_data: null,
         audio_name: audioName || editingEcoute.audio_name,
         lien_audio: audioName || editingEcoute.lien_audio || null,
         criteres: { ...criteres }
@@ -152,10 +149,10 @@ export default function EcoutesPage() {
       ))
     } else {
       const newEcoute: Ecoute = {
-        id: Date.now().toString(),
+        id: ecouteId,
         agent_id: formData.agent_id,
         lien_audio: audioName || formData.lien_audio || null,
-        audio_data: audioData,
+        audio_data: null,
         audio_name: audioName,
         date_prise_rdv: formData.date_prise_rdv,
         date_rdv: formData.date_rdv,
@@ -167,7 +164,6 @@ export default function EcoutesPage() {
         criteres: { ...criteres },
         created_at: new Date().toISOString()
       }
-      console.log('New ecoute with criteres:', newEcoute)
       setEcoutes([...ecoutes, newEcoute])
     }
     setIsModalOpen(false)
@@ -341,26 +337,31 @@ export default function EcoutesPage() {
               </div>
             </div>
             
-            {!audioFile && !formData.audio_data && !formData.audio_name ? (
+            <div className="mb-2 p-3 bg-[#fff3cd] border border-[#ffc107] rounded-lg">
+              <p className="text-xs text-[#856404]">
+                ⚠️ Les fichiers audio sont stockés temporairement pendant votre session. Pour un stockage permanent, configurez Supabase Storage.
+              </p>
+            </div>
+            
+            {!audioFile && !audioUrl ? (
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#7c3aed] rounded-xl cursor-pointer bg-white hover:bg-[#faf9f7] transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-8 h-8 text-[#7c3aed] mb-2" />
-                  <p className="text-sm text-[#6b7280]">
-                    <span className="font-semibold text-[#7c3aed]">Cliquez pour uploader</span> ou glissez-déposez
-                  </p>
-                  <p className="text-xs text-[#9ca3af] mt-1">MP3, WAV, M4A, OGG (max 50MB)</p>
-                </div>
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept="audio/*,.mp3,.wav,.m4a,.ogg"
+                <Upload className="w-8 h-8 text-[#7c3aed] mb-2" />
+                <p className="text-sm font-medium text-[#1a1a2e]">
+                  Cliquez pour uploader un fichier audio
+                </p>
+                <p className="text-xs text-[#6b7280] mt-1">
+                  MP3, WAV, M4A (max 50MB)
+                </p>
+                <input
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
                     if (file) {
                       setAudioFile(file)
                       const url = URL.createObjectURL(file)
                       setAudioUrl(url)
-                      setFormData({ ...formData, lien_audio: file.name })
                     }
                   }}
                 />
