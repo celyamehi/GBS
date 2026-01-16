@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio } from 'lucide-react'
+import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import { mockAgents, mockEcoutes, PROJETS } from '@/data/mockData'
@@ -30,7 +30,9 @@ export default function EcoutesPage() {
     rdv_qualite: false,
     rdv_honore: null as boolean | null,
     note_globale: 5,
-    remarques: ''
+    remarques: '',
+    numero_client: '',
+    nom_client: ''
   })
 
   const [criteres, setCriteres] = useState<Record<string, { respecte: boolean; commentaire: string }>>({})
@@ -77,7 +79,9 @@ export default function EcoutesPage() {
         rdv_qualite: ecoute.rdv_qualite,
         rdv_honore: ecoute.rdv_honore,
         note_globale: ecoute.note_globale,
-        remarques: ecoute.remarques || ''
+        remarques: ecoute.remarques || '',
+        numero_client: ecoute.numero_client || '',
+        nom_client: ecoute.nom_client || ''
       })
       setAudioFile(null)
       // Si l'écoute a un lien audio Supabase, l'utiliser directement
@@ -106,7 +110,9 @@ export default function EcoutesPage() {
         rdv_qualite: false,
         rdv_honore: null,
         note_globale: 5,
-        remarques: ''
+        remarques: '',
+        numero_client: '',
+        nom_client: ''
       })
       setCriteres(initCriteres())
     }
@@ -146,6 +152,8 @@ export default function EcoutesPage() {
         rdv_honore: formData.rdv_honore,
         note_globale: formData.note_globale,
         remarques: formData.remarques || null,
+        numero_client: formData.numero_client || null,
+        nom_client: formData.nom_client || null,
         audio_data: null,
         audio_name: audioName || editingEcoute.audio_name,
         lien_audio: audioUrl || editingEcoute.lien_audio || null,
@@ -168,6 +176,8 @@ export default function EcoutesPage() {
         rdv_honore: formData.rdv_honore,
         note_globale: formData.note_globale,
         remarques: formData.remarques || null,
+        numero_client: formData.numero_client || null,
+        nom_client: formData.nom_client || null,
         criteres: { ...criteres },
         created_at: new Date().toISOString()
       }
@@ -190,6 +200,12 @@ export default function EcoutesPage() {
     setEcoutes(ecoutes.map(ec => 
       ec.id === ecouteId ? { ...ec, rdv_qualite: !ec.rdv_qualite } : ec
     ))
+  }
+
+  const deleteEcoute = (ecouteId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette écoute ?')) {
+      setEcoutes(ecoutes.filter(ec => ec.id !== ecouteId))
+    }
   }
 
   return (
@@ -257,6 +273,8 @@ export default function EcoutesPage() {
                 <th>Agent</th>
                 <th>Date prise RDV</th>
                 <th>Date RDV</th>
+                <th>Numéro client</th>
+                <th>Nom client</th>
                 <th>Statut</th>
                 <th>Qualité</th>
                 <th>Note</th>
@@ -266,7 +284,7 @@ export default function EcoutesPage() {
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={9} className="text-center py-8 text-[#6b7280]">
                     Aucune écoute trouvée
                   </td>
                 </tr>
@@ -276,6 +294,8 @@ export default function EcoutesPage() {
                     <td className="font-medium">{getAgentName(ecoute.agent_id)}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_prise_rdv)}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
+                    <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.nom_client || '-'}</td>
                     <td>
                       <span className={`badge ${
                         ecoute.statut_rdv === 'Validé qualité' ? 'badge-success' :
@@ -317,6 +337,13 @@ export default function EcoutesPage() {
                             <ExternalLink className="w-4 h-4 text-[#1e40af]" />
                           </a>
                         )}
+                        <button
+                          onClick={() => deleteEcoute(ecoute.id)}
+                          className="p-2 rounded-lg hover:bg-[#ffd6e0] transition-colors"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-4 h-4 text-[#ef4444]" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -474,6 +501,30 @@ export default function EcoutesPage() {
                   <option key={statut} value={statut}>{statut}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                Numéro client
+              </label>
+              <input
+                type="text"
+                value={formData.numero_client}
+                onChange={(e) => setFormData({ ...formData, numero_client: e.target.value })}
+                className="input-field"
+                placeholder="Numéro de téléphone du client"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                Nom client
+              </label>
+              <input
+                type="text"
+                value={formData.nom_client}
+                onChange={(e) => setFormData({ ...formData, nom_client: e.target.value })}
+                className="input-field"
+                placeholder="Nom du client"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
