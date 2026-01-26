@@ -30,7 +30,10 @@ export default function StatistiquesPage() {
 
   // Écoutes du mois en cours (pour la vue globale)
   const currentMonthEcoutes = useMemo(() => {
-    return ecoutes.filter(ecoute => ecoute.date_rdv.substring(0, 7) === currentMonth)
+    return ecoutes.filter(ecoute => 
+      ecoute.date_rdv.substring(0, 7) === currentMonth &&
+      (ecoute.statut_rdv === 'Validé qualité' || ecoute.statut_rdv === '2ème passage')
+    )
   }, [ecoutes, currentMonth])
 
   // Stats du mois en cours (vue globale)
@@ -58,7 +61,11 @@ export default function StatistiquesPage() {
     const activeAgents = agents.filter(a => a.actif)
 
     return activeAgents.map(agent => {
-      const agentEcoutes = filteredEcoutes.filter(e => e.agent_id === agent.id)
+      // Filtrer uniquement les RDV Validé qualité et 2ème passage
+      const agentEcoutes = filteredEcoutes.filter(e => 
+        e.agent_id === agent.id &&
+        (e.statut_rdv === 'Validé qualité' || e.statut_rdv === '2ème passage')
+      )
       const total = agentEcoutes.length
       const qualite = agentEcoutes.filter(e => e.rdv_qualite).length
       const honores = agentEcoutes.filter(e => e.rdv_honore === true).length

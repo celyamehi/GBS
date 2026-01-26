@@ -19,6 +19,8 @@ export default function SuiviRdvPage() {
   const activeAgents = agents.filter(a => a.actif)
 
   const filteredEcoutes = ecoutes.filter(ecoute => {
+    // Filtrer uniquement les RDV Validé qualité et 2ème passage
+    const isQualiteValide = ecoute.statut_rdv === 'Validé qualité' || ecoute.statut_rdv === '2ème passage'
     const matchesAgent = !filterAgent || ecoute.agent_id === filterAgent
     const matchesStatut = !filterStatut || ecoute.statut_rdv === filterStatut
     const matchesHonore = filterHonore === '' || 
@@ -28,7 +30,7 @@ export default function SuiviRdvPage() {
     const matchesDateDebut = !dateDebut || ecoute.date_rdv >= dateDebut
     const matchesDateFin = !dateFin || ecoute.date_rdv <= dateFin
     
-    return matchesAgent && matchesStatut && matchesHonore && matchesDateDebut && matchesDateFin
+    return isQualiteValide && matchesAgent && matchesStatut && matchesHonore && matchesDateDebut && matchesDateFin
   })
 
   const toggleHonore = (ecouteId: string, honore: boolean) => {

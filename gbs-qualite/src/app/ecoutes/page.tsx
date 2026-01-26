@@ -16,6 +16,10 @@ export default function EcoutesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAgent, setFilterAgent] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
+  const [filterDateRdvDebut, setFilterDateRdvDebut] = useState('')
+  const [filterDateRdvFin, setFilterDateRdvFin] = useState('')
+  const [filterDatePriseDebut, setFilterDatePriseDebut] = useState('')
+  const [filterDatePriseFin, setFilterDatePriseFin] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEcoute, setEditingEcoute] = useState<Ecoute | null>(null)
   
@@ -44,10 +48,29 @@ export default function EcoutesPage() {
 
   const filteredEcoutes = ecoutes.filter(ecoute => {
     const agent = agents.find(a => a.id === ecoute.agent_id)
-    const matchesSearch = agent?.nom.toLowerCase().includes(searchTerm.toLowerCase()) || false
+    
+    // Recherche globale dans tous les champs
+    const searchLower = searchTerm.toLowerCase()
+    const matchesSearch = !searchTerm || 
+      agent?.nom.toLowerCase().includes(searchLower) ||
+      ecoute.numero_client?.toLowerCase().includes(searchLower) ||
+      ecoute.nom_client?.toLowerCase().includes(searchLower) ||
+      ecoute.statut_rdv.toLowerCase().includes(searchLower)
+    
     const matchesAgent = !filterAgent || ecoute.agent_id === filterAgent
     const matchesStatut = !filterStatut || ecoute.statut_rdv === filterStatut
-    return matchesSearch && matchesAgent && matchesStatut
+    
+    // Filtres par date RDV
+    const matchesDateRdvDebut = !filterDateRdvDebut || ecoute.date_rdv >= filterDateRdvDebut
+    const matchesDateRdvFin = !filterDateRdvFin || ecoute.date_rdv <= filterDateRdvFin
+    
+    // Filtres par date prise RDV
+    const matchesDatePriseDebut = !filterDatePriseDebut || ecoute.date_prise_rdv >= filterDatePriseDebut
+    const matchesDatePriseFin = !filterDatePriseFin || ecoute.date_prise_rdv <= filterDatePriseFin
+    
+    return matchesSearch && matchesAgent && matchesStatut && 
+           matchesDateRdvDebut && matchesDateRdvFin && 
+           matchesDatePriseDebut && matchesDatePriseFin
   })
 
   const initCriteres = () => {
@@ -231,7 +254,7 @@ export default function EcoutesPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b7280]" />
               <input
                 type="text"
-                placeholder="Rechercher par agent..."
+                placeholder="Rechercher (agent, client, numéro...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-field pl-11"
@@ -262,6 +285,63 @@ export default function EcoutesPage() {
               ))}
             </select>
           </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-4 mt-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-[#1a1a2e]">Date RDV:</label>
+            <input
+              type="date"
+              value={filterDateRdvDebut}
+              onChange={(e) => setFilterDateRdvDebut(e.target.value)}
+              className="input-field w-40"
+              placeholder="Du"
+            />
+            <span className="text-[#6b7280]">au</span>
+            <input
+              type="date"
+              value={filterDateRdvFin}
+              onChange={(e) => setFilterDateRdvFin(e.target.value)}
+              className="input-field w-40"
+              placeholder="Au"
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-[#1a1a2e]">Date prise RDV:</label>
+            <input
+              type="date"
+              value={filterDatePriseDebut}
+              onChange={(e) => setFilterDatePriseDebut(e.target.value)}
+              className="input-field w-40"
+              placeholder="Du"
+            />
+            <span className="text-[#6b7280]">au</span>
+            <input
+              type="date"
+              value={filterDatePriseFin}
+              onChange={(e) => setFilterDatePriseFin(e.target.value)}
+              className="input-field w-40"
+              placeholder="Au"
+            />
+          </div>
+          
+          {(searchTerm || filterAgent || filterStatut || filterDateRdvDebut || filterDateRdvFin || filterDatePriseDebut || filterDatePriseFin) && (
+            <button
+              onClick={() => {
+                setSearchTerm('')
+                setFilterAgent('')
+                setFilterStatut('')
+                setFilterDateRdvDebut('')
+                setFilterDateRdvFin('')
+                setFilterDatePriseDebut('')
+                setFilterDatePriseFin('')
+              }}
+              className="btn-secondary text-sm"
+            >
+              Réinitialiser les filtres
+            </button>
+          )}
         </div>
       </div>
 

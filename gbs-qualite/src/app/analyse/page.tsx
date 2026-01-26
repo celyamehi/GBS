@@ -19,10 +19,12 @@ export default function AnalysePage() {
   // Filtrer les écoutes par agent et dates
   const filteredEcoutes = useMemo(() => {
     return ecoutes.filter(ecoute => {
+      // Filtrer uniquement les RDV Validé qualité et 2ème passage
+      const isQualiteValide = ecoute.statut_rdv === 'Validé qualité' || ecoute.statut_rdv === '2ème passage'
       const matchesAgent = !selectedAgent || ecoute.agent_id === selectedAgent
       const matchesDateDebut = !dateDebut || ecoute.date_rdv >= dateDebut
       const matchesDateFin = !dateFin || ecoute.date_rdv <= dateFin
-      return matchesAgent && matchesDateDebut && matchesDateFin
+      return isQualiteValide && matchesAgent && matchesDateDebut && matchesDateFin
     })
   }, [ecoutes, selectedAgent, dateDebut, dateFin])
 

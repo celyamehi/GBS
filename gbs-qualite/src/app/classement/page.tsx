@@ -31,12 +31,17 @@ export default function ClassementPage() {
         agentEcoutes = agentEcoutes.filter(e => e.date_rdv <= dateFin)
       }
 
-      const totalRdv = agentEcoutes.length
-      const rdvQualite = agentEcoutes.filter(e => e.rdv_qualite).length
+      // Filtrer uniquement les RDV "Validé qualité" et "2ème passage"
+      const rdvQualiteValides = agentEcoutes.filter(e => 
+        e.statut_rdv === 'Validé qualité' || e.statut_rdv === '2ème passage'
+      )
+      
+      const totalRdv = rdvQualiteValides.length
+      const rdvQualite = rdvQualiteValides.filter(e => e.rdv_qualite).length
       const rdvNonQualite = totalRdv - rdvQualite
       const tauxQualite = totalRdv > 0 ? (rdvQualite / totalRdv) * 100 : 0
-      const rdvHonores = agentEcoutes.filter(e => e.rdv_honore === true).length
-      const rdvNonHonores = agentEcoutes.filter(e => e.rdv_honore === false).length
+      const rdvHonores = rdvQualiteValides.filter(e => e.rdv_honore === true).length
+      const rdvNonHonores = rdvQualiteValides.filter(e => e.rdv_honore === false).length
 
       return {
         agent,
