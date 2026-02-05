@@ -167,3 +167,17 @@ export async function createBriefing(briefing: any) {
     return null
   }
 }
+
+export async function deleteBriefing(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('briefings')
+      .delete()
+      .eq('id', id)
+    
+    return !error
+  } catch (error) {
+    console.error('Erreur lors de la suppression du briefing:', error)
+    return false
+  }
+}

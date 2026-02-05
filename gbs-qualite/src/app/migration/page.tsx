@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Database, Upload, Check, AlertCircle, Loader2 } from 'lucide-react'
+import { Database, Upload, Check, AlertCircle, Loader2, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import { Agent, Ecoute, Briefing } from '@/lib/supabase'
 import { 
@@ -110,13 +110,13 @@ export default function MigrationPage() {
           const result = await createAgent(agentData)
           if (result) {
             imported++
-            addLog(`✅ Agent importé: ${agent.nom}`)
+            addLog(`✅ Agent importé: ${agent.nom} (Code: ${agent.code_agent})`)
           } else {
             errors++
             addLog(`❌ Erreur import agent: ${agent.nom}`)
           }
         } else {
-          addLog(`⚠️ Agent déjà existant: ${agent.nom}`)
+          addLog(`⚠️ Agent déjà existant: ${agent.nom} (Code: ${agent.code_agent})`)
         }
       } catch (error) {
         errors++
@@ -440,6 +440,14 @@ export default function MigrationPage() {
                 </>
               )}
             </button>
+
+            <a 
+              href="/migration/reset"
+              className="btn-danger w-full flex items-center justify-center gap-2 text-center"
+            >
+              <Trash2 className="w-4 h-4" />
+              Réinitialiser Supabase (⚠️)
+            </a>
 
             {migrationComplete && (
               <button
