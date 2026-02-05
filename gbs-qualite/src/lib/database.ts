@@ -83,7 +83,21 @@ export async function getEcoutes(): Promise<Ecoute[]> {
   }
 }
 
-export async function createEcoute(ecoute: Omit<Ecoute, 'id' | 'created_at'>): Promise<Ecoute | null> {
+export async function createEcoute(ecoute: {
+  agent_id: string
+  lien_audio?: string | null
+  audio_name?: string | null
+  date_prise_rdv: string
+  date_rdv: string
+  statut_rdv: string
+  rdv_qualite?: boolean
+  rdv_honore?: boolean | null
+  note_globale?: number
+  remarques?: string | null
+  numero_client?: string | null
+  nom_client?: string | null
+  criteres?: Record<string, { respecte: boolean; commentaire: string }> | null
+}): Promise<Ecoute | null> {
   try {
     const { data, error } = await supabase
       .from('ecoutes')
