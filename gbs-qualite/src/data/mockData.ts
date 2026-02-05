@@ -8,4 +8,4 @@ export const mockCriteres: CritereEvaluation[] = []
 
 export const mockBriefings: Briefing[] = []
 
-export const PROJETS = ['Mutuelles']
+export const PROJETS = ['GBS']

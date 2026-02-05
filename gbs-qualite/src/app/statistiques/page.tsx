@@ -5,11 +5,11 @@ import { TrendingUp, Calendar, CheckCircle, XCircle } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { Agent, Ecoute } from '@/lib/supabase'
-import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
+import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
 
 export default function StatistiquesPage() {
-  const { agents } = useSupabaseAgents()
-  const { ecoutes } = useSupabaseEcoutes()
+  const { agents, loading: agentsLoading, error: agentsError } = useAgents()
+  const { ecoutes, loading: ecoutesLoading, error: ecoutesError } = useEcoutes()
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
@@ -118,6 +118,31 @@ export default function StatistiquesPage() {
 
   const getAgentName = (agentId: string) => {
     return agents.find(a => a.id === agentId)?.nom || 'Agent inconnu'
+  }
+
+  if (agentsLoading || ecoutesLoading) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7c3aed] mx-auto mb-4"></div>
+          <p className="text-[#6b7280]">Chargement des données...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (agentsError || ecoutesError) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <XCircle className="w-12 h-12 mx-auto" />
+          </div>
+          <p className="text-red-600 mb-2">Erreur de chargement</p>
+          <p className="text-[#6b7280] text-sm">{agentsError || ecoutesError}</p>
+        </div>
+      </div>
+    )
   }
 
   return (

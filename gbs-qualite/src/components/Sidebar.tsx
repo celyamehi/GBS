@@ -10,8 +10,7 @@ import {
   MessageSquare, 
   BarChart3,
   Sparkles,
-  PieChart,
-  Database
+  PieChart
 } from 'lucide-react'
 
 const navItems = [
@@ -22,7 +21,6 @@ const navItems = [
   { href: '/suivi-rdv', label: 'Suivi RDV', icon: CalendarCheck },
   { href: '/briefings', label: 'Briefings IA', icon: MessageSquare },
   { href: '/statistiques', label: 'Statistiques', icon: BarChart3 },
-  { href: '/migration', label: 'Migration', icon: Database },
 ]
 
 export default function Sidebar() {

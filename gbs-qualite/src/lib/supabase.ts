@@ -18,6 +18,7 @@ export type Ecoute = {
   id: string
   agent_id: string
   lien_audio: string | null
+  audio_data: string | null
   audio_name: string | null
   date_prise_rdv: string
   date_rdv: string

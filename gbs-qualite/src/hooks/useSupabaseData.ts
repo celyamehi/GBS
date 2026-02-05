@@ -1,19 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Agent, Ecoute } from '@/lib/supabase'
-import { 
-  getAgents, 
-  createAgent, 
-  updateAgent, 
-  deleteAgent,
-  getEcoutes, 
-  createEcoute, 
-  updateEcoute, 
-  deleteEcoute,
-  getBriefings,
-  createBriefing
-} from '@/lib/database'
+import { agentsService, ecoutesService } from '@/lib/supabaseService'
 
-export function useSupabaseAgents() {
+export function useAgents() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,57 +11,12 @@ export function useSupabaseAgents() {
     try {
       setLoading(true)
       setError(null)
-      const data = await getAgents()
+      const data = await agentsService.getAll()
       setAgents(data)
     } catch (err) {
-      setError('Erreur lors du chargement des agents')
-      console.error(err)
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des agents')
     } finally {
       setLoading(false)
-    }
-  }, [])
-
-  const addAgent = useCallback(async (agentData: Omit<Agent, 'id' | 'created_at'>) => {
-    try {
-      const newAgent = await createAgent(agentData)
-      if (newAgent) {
-        setAgents(prev => [newAgent, ...prev])
-        return newAgent
-      }
-      return null
-    } catch (err) {
-      console.error('Erreur lors de l\'ajout de l\'agent:', err)
-      return null
-    }
-  }, [])
-
-  const updateAgentData = useCallback(async (id: string, updates: Partial<Agent>) => {
-    try {
-      const updatedAgent = await updateAgent(id, updates)
-      if (updatedAgent) {
-        setAgents(prev => prev.map(agent => 
-          agent.id === id ? updatedAgent : agent
-        ))
-        return updatedAgent
-      }
-      return null
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour de l\'agent:', err)
-      return null
-    }
-  }, [])
-
-  const removeAgent = useCallback(async (id: string) => {
-    try {
-      const success = await deleteAgent(id)
-      if (success) {
-        setAgents(prev => prev.filter(agent => agent.id !== id))
-        return true
-      }
-      return false
-    } catch (err) {
-      console.error('Erreur lors de la suppression de l\'agent:', err)
-      return false
     }
   }, [])
 
@@ -80,18 +24,50 @@ export function useSupabaseAgents() {
     fetchAgents()
   }, [fetchAgents])
 
+  const createAgent = useCallback(async (agent: Omit<Agent, 'id' | 'created_at'>) => {
+    try {
+      const newAgent = await agentsService.create(agent)
+      setAgents(prev => [...prev, newAgent])
+      return newAgent
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la création')
+      throw err
+    }
+  }, [])
+
+  const updateAgent = useCallback(async (id: string, agent: Partial<Agent>) => {
+    try {
+      const updatedAgent = await agentsService.update(id, agent)
+      setAgents(prev => prev.map(a => a.id === id ? updatedAgent : a))
+      return updatedAgent
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
+      throw err
+    }
+  }, [])
+
+  const deleteAgent = useCallback(async (id: string) => {
+    try {
+      await agentsService.delete(id)
+      setAgents(prev => prev.filter(a => a.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression')
+      throw err
+    }
+  }, [])
+
   return {
     agents,
     loading,
     error,
     refetch: fetchAgents,
-    addAgent,
-    updateAgent: updateAgentData,
-    deleteAgent: removeAgent
+    createAgent,
+    updateAgent,
+    deleteAgent
   }
 }
 
-export function useSupabaseEcoutes() {
+export function useEcoutes() {
   const [ecoutes, setEcoutes] = useState<Ecoute[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -100,57 +76,12 @@ export function useSupabaseEcoutes() {
     try {
       setLoading(true)
       setError(null)
-      const data = await getEcoutes()
+      const data = await ecoutesService.getAll()
       setEcoutes(data)
     } catch (err) {
-      setError('Erreur lors du chargement des écoutes')
-      console.error(err)
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des écoutes')
     } finally {
       setLoading(false)
-    }
-  }, [])
-
-  const addEcoute = useCallback(async (ecouteData: Omit<Ecoute, 'id' | 'created_at'>) => {
-    try {
-      const newEcoute = await createEcoute(ecouteData)
-      if (newEcoute) {
-        setEcoutes(prev => [newEcoute, ...prev])
-        return newEcoute
-      }
-      return null
-    } catch (err) {
-      console.error('Erreur lors de l\'ajout de l\'écoute:', err)
-      return null
-    }
-  }, [])
-
-  const updateEcouteData = useCallback(async (id: string, updates: Partial<Ecoute>) => {
-    try {
-      const updatedEcoute = await updateEcoute(id, updates)
-      if (updatedEcoute) {
-        setEcoutes(prev => prev.map(ecoute => 
-          ecoute.id === id ? updatedEcoute : ecoute
-        ))
-        return updatedEcoute
-      }
-      return null
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour de l\'écoute:', err)
-      return null
-    }
-  }, [])
-
-  const removeEcoute = useCallback(async (id: string) => {
-    try {
-      const success = await deleteEcoute(id)
-      if (success) {
-        setEcoutes(prev => prev.filter(ecoute => ecoute.id !== id))
-        return true
-      }
-      return false
-    } catch (err) {
-      console.error('Erreur lors de la suppression de l\'écoute:', err)
-      return false
     }
   }, [])
 
@@ -158,59 +89,69 @@ export function useSupabaseEcoutes() {
     fetchEcoutes()
   }, [fetchEcoutes])
 
+  const createEcoute = useCallback(async (ecoute: Omit<Ecoute, 'id' | 'created_at'>) => {
+    try {
+      const newEcoute = await ecoutesService.create(ecoute)
+      setEcoutes(prev => [newEcoute, ...prev])
+      return newEcoute
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la création')
+      throw err
+    }
+  }, [])
+
+  const updateEcoute = useCallback(async (id: string, ecoute: Partial<Ecoute>) => {
+    try {
+      const updatedEcoute = await ecoutesService.update(id, ecoute)
+      setEcoutes(prev => prev.map(e => e.id === id ? updatedEcoute : e))
+      return updatedEcoute
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
+      throw err
+    }
+  }, [])
+
+  const deleteEcoute = useCallback(async (id: string) => {
+    try {
+      await ecoutesService.delete(id)
+      setEcoutes(prev => prev.filter(e => e.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression')
+      throw err
+    }
+  }, [])
+
+  const toggleQualite = useCallback(async (id: string) => {
+    try {
+      const updatedEcoute = await ecoutesService.toggleQualite(id)
+      setEcoutes(prev => prev.map(e => e.id === id ? updatedEcoute : e))
+      return updatedEcoute
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
+      throw err
+    }
+  }, [])
+
+  const toggleHonore = useCallback(async (id: string, honore: boolean) => {
+    try {
+      const updatedEcoute = await ecoutesService.toggleHonore(id, honore)
+      setEcoutes(prev => prev.map(e => e.id === id ? updatedEcoute : e))
+      return updatedEcoute
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
+      throw err
+    }
+  }, [])
+
   return {
     ecoutes,
     loading,
     error,
     refetch: fetchEcoutes,
-    addEcoute,
-    updateEcoute: updateEcouteData,
-    deleteEcoute: removeEcoute
-  }
-}
-
-export function useSupabaseBriefings() {
-  const [briefings, setBriefings] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchBriefings = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await getBriefings()
-      setBriefings(data)
-    } catch (err) {
-      setError('Erreur lors du chargement des briefings')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const addBriefing = useCallback(async (briefingData: any) => {
-    try {
-      const newBriefing = await createBriefing(briefingData)
-      if (newBriefing) {
-        setBriefings(prev => [newBriefing, ...prev])
-        return newBriefing
-      }
-      return null
-    } catch (err) {
-      console.error('Erreur lors de l\'ajout du briefing:', err)
-      return null
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchBriefings()
-  }, [fetchBriefings])
-
-  return {
-    briefings,
-    loading,
-    error,
-    refetch: fetchBriefings,
-    addBriefing
+    createEcoute,
+    updateEcoute,
+    deleteEcoute,
+    toggleQualite,
+    toggleHonore
   }
 }

@@ -4,15 +4,14 @@ import { useState } from 'react'
 import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
-import { PROJETS } from '@/data/mockData'
 import { Agent, Ecoute, BLOCS_CRITERES, STATUTS_RDV } from '@/lib/supabase'
-import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
+import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
 import { uploadAudioFile } from '@/lib/storage'
 import Link from 'next/link'
 
 export default function EcoutesPage() {
-  const { agents, loading: agentsLoading } = useSupabaseAgents()
-  const { ecoutes, loading: ecoutesLoading, addEcoute, updateEcoute: updateEcouteData, deleteEcoute: removeEcoute } = useSupabaseEcoutes()
+  const { agents, loading: agentsLoading, error: agentsError } = useAgents()
+  const { ecoutes, loading: ecoutesLoading, error: ecoutesError, createEcoute, updateEcoute, deleteEcoute, toggleQualite: toggleQualiteSupabase } = useEcoutes()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAgent, setFilterAgent] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
@@ -26,6 +25,7 @@ export default function EcoutesPage() {
   const [formData, setFormData] = useState({
     agent_id: '',
     lien_audio: '',
+    audio_data: '' as string | null,
     audio_name: '' as string | null,
     date_prise_rdv: '',
     date_rdv: '',
@@ -93,6 +93,7 @@ export default function EcoutesPage() {
       setFormData({
         agent_id: ecoute.agent_id,
         lien_audio: ecoute.lien_audio || '',
+        audio_data: null,
         audio_name: ecoute.audio_name || null,
         date_prise_rdv: ecoute.date_prise_rdv,
         date_rdv: ecoute.date_rdv,
@@ -123,6 +124,7 @@ export default function EcoutesPage() {
       setFormData({
         agent_id: activeAgents[0]?.id || '',
         lien_audio: '',
+        audio_data: null,
         audio_name: null,
         date_prise_rdv: new Date().toISOString().split('T')[0],
         date_rdv: '',
@@ -162,7 +164,8 @@ export default function EcoutesPage() {
     }
 
     if (editingEcoute) {
-      const updatedData = {
+      const updatedEcoute: Ecoute = {
+        ...editingEcoute,
         agent_id: formData.agent_id,
         date_prise_rdv: formData.date_prise_rdv,
         date_rdv: formData.date_rdv,
@@ -173,15 +176,31 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
+        audio_data: null,
         audio_name: audioName || editingEcoute.audio_name,
         lien_audio: audioUrl || editingEcoute.lien_audio || null,
         criteres: { ...criteres }
       }
-      await updateEcouteData(editingEcoute.id, updatedData)
+      await updateEcoute(editingEcoute.id, {
+        agent_id: formData.agent_id,
+        date_prise_rdv: formData.date_prise_rdv,
+        date_rdv: formData.date_rdv,
+        statut_rdv: formData.statut_rdv,
+        rdv_qualite: formData.rdv_qualite,
+        rdv_honore: formData.rdv_honore,
+        note_globale: formData.note_globale,
+        remarques: formData.remarques || null,
+        numero_client: formData.numero_client || null,
+        nom_client: formData.nom_client || null,
+        lien_audio: audioUrl || editingEcoute.lien_audio || null,
+        audio_name: audioName || editingEcoute.audio_name,
+        criteres: { ...criteres }
+      })
     } else {
-      const newEcouteData = {
+      await createEcoute({
         agent_id: formData.agent_id,
         lien_audio: audioUrl || null,
+        audio_data: null,
         audio_name: audioName,
         date_prise_rdv: formData.date_prise_rdv,
         date_rdv: formData.date_rdv,
@@ -193,8 +212,7 @@ export default function EcoutesPage() {
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
         criteres: { ...criteres }
-      }
-      await addEcoute(newEcouteData)
+      })
     }
     
     setIsUploading(false)
@@ -209,25 +227,44 @@ export default function EcoutesPage() {
     return new Date(dateStr).toLocaleDateString('fr-FR')
   }
 
-  const toggleQualite = async (ecouteId: string) => {
-    const ecoute = ecoutes.find(e => e.id === ecouteId)
-    if (ecoute) {
-      await updateEcouteData(ecouteId, { rdv_qualite: !ecoute.rdv_qualite })
+  const handleToggleQualite = async (ecouteId: string) => {
+    try {
+      await toggleQualiteSupabase(ecouteId)
+    } catch (error) {
+      console.error('Erreur lors du changement de qualité:', error)
     }
   }
 
-  const deleteEcoute = async (ecouteId: string) => {
+  const handleDeleteEcoute = async (ecouteId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette écoute ?')) {
-      await removeEcoute(ecouteId)
+      try {
+        await deleteEcoute(ecouteId)
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error)
+      }
     }
   }
 
   if (agentsLoading || ecoutesLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7c3aed] mx-auto mb-4"></div>
           <p className="text-[#6b7280]">Chargement des données...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (agentsError || ecoutesError) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <X className="w-12 h-12 mx-auto" />
+          </div>
+          <p className="text-red-600 mb-2">Erreur de chargement</p>
+          <p className="text-[#6b7280] text-sm">{agentsError || ecoutesError}</p>
         </div>
       </div>
     )
@@ -389,7 +426,7 @@ export default function EcoutesPage() {
                     </td>
                     <td>
                       <button
-                        onClick={() => toggleQualite(ecoute.id)}
+                        onClick={() => handleToggleQualite(ecoute.id)}
                         className={`badge cursor-pointer hover:opacity-80 transition-opacity ${ecoute.rdv_qualite ? 'badge-success' : 'badge-danger'}`}
                         title="Cliquer pour changer"
                       >
@@ -420,7 +457,7 @@ export default function EcoutesPage() {
                           </a>
                         )}
                         <button
-                          onClick={() => deleteEcoute(ecoute.id)}
+                          onClick={() => handleDeleteEcoute(ecoute.id)}
                           className="p-2 rounded-lg hover:bg-[#ffd6e0] transition-colors"
                           title="Supprimer"
                         >
@@ -499,7 +536,7 @@ export default function EcoutesPage() {
                         <p className="text-xs text-[#6b7280]">
                           {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
                         </p>
-                      ) : audioUrl && (
+                      ) : formData.audio_data && (
                         <p className="text-xs text-[#10b981]">Audio disponible</p>
                       )}
                     </div>
@@ -508,9 +545,9 @@ export default function EcoutesPage() {
                     type="button"
                     onClick={() => {
                       setAudioFile(null)
-                      if (audioUrl) URL.revokeObjectURL(audioUrl)
+                      if (audioUrl && !formData.audio_data) URL.revokeObjectURL(audioUrl)
                       setAudioUrl(null)
-                      setFormData({ ...formData, lien_audio: '', audio_name: null })
+                      setFormData({ ...formData, lien_audio: '', audio_data: null, audio_name: null })
                     }}
                     className="p-2 rounded-lg hover:bg-[#ffd6e0] transition-colors"
                   >

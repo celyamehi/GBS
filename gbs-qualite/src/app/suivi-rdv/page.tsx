@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { Search, Check, X } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import { Agent, Ecoute, STATUTS_RDV } from '@/lib/supabase'
-import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
+import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
 
 export default function SuiviRdvPage() {
-  const { agents } = useSupabaseAgents()
-  const { ecoutes, updateEcoute: updateEcouteData } = useSupabaseEcoutes()
+  const { agents, loading: agentsLoading, error: agentsError } = useAgents()
+  const { ecoutes, loading: ecoutesLoading, error: ecoutesError, toggleHonore: toggleHonoreSupabase } = useEcoutes()
   const [filterAgent, setFilterAgent] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
   const [filterHonore, setFilterHonore] = useState<string>('')
@@ -32,8 +32,12 @@ export default function SuiviRdvPage() {
     return isQualiteValide && matchesAgent && matchesStatut && matchesHonore && matchesDateDebut && matchesDateFin
   })
 
-  const toggleHonore = async (ecouteId: string, honore: boolean) => {
-    await updateEcouteData(ecouteId, { rdv_honore: honore })
+  const handleToggleHonore = async (ecouteId: string, honore: boolean) => {
+    try {
+      await toggleHonoreSupabase(ecouteId, honore)
+    } catch (error) {
+      console.error('Erreur lors du changement de statut:', error)
+    }
   }
 
   const getAgentName = (agentId: string) => {
@@ -49,6 +53,31 @@ export default function SuiviRdvPage() {
     honores: filteredEcoutes.filter(e => e.rdv_honore === true).length,
     nonHonores: filteredEcoutes.filter(e => e.rdv_honore === false).length,
     enAttente: filteredEcoutes.filter(e => e.rdv_honore === null).length
+  }
+
+  if (agentsLoading || ecoutesLoading) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7c3aed] mx-auto mb-4"></div>
+          <p className="text-[#6b7280]">Chargement des données...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (agentsError || ecoutesError) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <X className="w-12 h-12 mx-auto" />
+          </div>
+          <p className="text-red-600 mb-2">Erreur de chargement</p>
+          <p className="text-[#6b7280] text-sm">{agentsError || ecoutesError}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -182,7 +211,7 @@ export default function SuiviRdvPage() {
                     <td>
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => toggleHonore(ecoute.id, true)}
+                          onClick={() => handleToggleHonore(ecoute.id, true)}
                           className={`p-2 rounded-lg transition-all ${
                             ecoute.rdv_honore === true 
                               ? 'bg-[#d4edda] text-[#10b981]' 
@@ -193,7 +222,7 @@ export default function SuiviRdvPage() {
                           <Check className="w-5 h-5" />
                         </button>
                         <button
-                          onClick={() => toggleHonore(ecoute.id, false)}
+                          onClick={() => handleToggleHonore(ecoute.id, false)}
                           className={`p-2 rounded-lg transition-all ${
                             ecoute.rdv_honore === false 
                               ? 'bg-[#ffd6e0] text-[#ef4444]' 
