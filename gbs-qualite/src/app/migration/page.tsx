@@ -134,20 +134,33 @@ export default function MigrationPage() {
     // Récupérer tous les agents une seule fois
     const agents = await getAgents()
     
+    // Créer une table de correspondance ID → code_agent
+    const idToCodeMap: Record<string, string> = {
+      '1768232525223': 'AG5223',  // Sfaihi SAMAH
+      '1768232535710': 'AG5710',  // Ouazene DIHIA
+      '1768232545890': 'AG5890',  // Mokrani DALILA
+      '1768380427249': 'AG7249',  // OUKMAMOU Melissa
+      '1768387445024': 'AG5024',  // Attik TINHINANE
+      '1768492296704': 'AG6704',  // Benyahia Lamine
+      '1768574323981': 'AG3981',  // SAHEL Ines
+      '1768820237053': 'AG7053',  // Mansouri Sihem
+      '1770110851331': 'AG1331'   // Hichem AZZEGAGH
+    }
+    
     for (const ecoute of ecoutes) {
       try {
-        // Chercher l'agent par code_agent
-        let agent = agents.find(a => a.code_agent === ecoute.agent_id)
+        // D'abord essayer la correspondance directe
+        let agentCode = idToCodeMap[ecoute.agent_id]
+        let agent = agents.find(a => a.code_agent === agentCode)
         
-        // Si pas trouvé, essayer par nom (au cas où)
-        if (!agent && ecoute.agent_nom) {
-          agent = agents.find(a => a.nom.toLowerCase() === ecoute.agent_nom.toLowerCase())
+        // Si pas trouvé, chercher par code_agent direct
+        if (!agent) {
+          agent = agents.find(a => a.code_agent === ecoute.agent_id)
         }
         
-        // Si toujours pas trouvé, essayer par correspondance partielle
-        if (!agent) {
-          addLog(`🔍 Recherche avancée pour agent_id: ${ecoute.agent_id}`)
-          addLog(`   Agents disponibles: ${agents.map(a => `${a.nom} (${a.code_agent})`).join(', ')}`)
+        // Si toujours pas trouvé, essayer par nom
+        if (!agent && ecoute.agent_nom) {
+          agent = agents.find(a => a.nom.toLowerCase() === ecoute.agent_nom.toLowerCase())
         }
         
         if (agent) {
@@ -171,14 +184,14 @@ export default function MigrationPage() {
           const result = await createEcoute(ecouteData)
           if (result) {
             imported++
-            addLog(`✅ Écoute importée: ${ecoute.date_rdv} - ${agent.nom} (${agent.code_agent})`)
+            addLog(`✅ Écoute importée: ${ecoute.date_rdv} - ${agent.nom} (${agent.code_agent}) [ID: ${ecoute.agent_id} → Code: ${agentCode || ecoute.agent_id}]`)
           } else {
             errors++
             addLog(`❌ Erreur import écoute: ${ecoute.date_rdv}`)
           }
         } else {
           errors++
-          addLog(`❌ Agent non trouvé pour l'écoute: ${ecoute.agent_id} (nom: ${ecoute.agent_nom || 'N/A'})`)
+          addLog(`❌ Agent non trouvé pour l'écoute: ${ecoute.agent_id} → ${agentCode || 'INCONNU'} (nom: ${ecoute.agent_nom || 'N/A'})`)
         }
       } catch (error) {
         errors++
@@ -195,13 +208,32 @@ export default function MigrationPage() {
 
     // Récupérer tous les agents une seule fois
     const agents = await getAgents()
+    
+    // Utiliser la même table de correspondance
+    const idToCodeMap: Record<string, string> = {
+      '1768232525223': 'AG5223',  // Sfaihi SAMAH
+      '1768232535710': 'AG5710',  // Ouazene DIHIA
+      '1768232545890': 'AG5890',  // Mokrani DALILA
+      '1768380427249': 'AG7249',  // OUKMAMOU Melissa
+      '1768387445024': 'AG5024',  // Attik TINHINANE
+      '1768492296704': 'AG6704',  // Benyahia Lamine
+      '1768574323981': 'AG3981',  // SAHEL Ines
+      '1768820237053': 'AG7053',  // Mansouri Sihem
+      '1770110851331': 'AG1331'   // Hichem AZZEGAGH
+    }
 
     for (const briefing of briefings) {
       try {
-        // Chercher l'agent par code_agent
-        let agent = agents.find(a => a.code_agent === briefing.agent_id)
+        // D'abord essayer la correspondance directe
+        let agentCode = idToCodeMap[briefing.agent_id]
+        let agent = agents.find(a => a.code_agent === agentCode)
         
-        // Si pas trouvé, essayer par nom
+        // Si pas trouvé, chercher par code_agent direct
+        if (!agent) {
+          agent = agents.find(a => a.code_agent === briefing.agent_id)
+        }
+        
+        // Si toujours pas trouvé, essayer par nom
         if (!agent && briefing.agent_nom) {
           agent = agents.find(a => a.nom.toLowerCase() === briefing.agent_nom.toLowerCase())
         }
@@ -217,14 +249,14 @@ export default function MigrationPage() {
           const result = await createBriefing(briefingData)
           if (result) {
             imported++
-            addLog(`✅ Briefing importé: ${briefing.date_briefing} - ${agent.nom} (${agent.code_agent})`)
+            addLog(`✅ Briefing importé: ${briefing.date_briefing} - ${agent.nom} (${agent.code_agent}) [ID: ${briefing.agent_id} → Code: ${agentCode || briefing.agent_id}]`)
           } else {
             errors++
             addLog(`❌ Erreur import briefing: ${briefing.date_briefing}`)
           }
         } else {
           errors++
-          addLog(`❌ Agent non trouvé pour le briefing: ${briefing.agent_id} (nom: ${briefing.agent_nom || 'N/A'})`)
+          addLog(`❌ Agent non trouvé pour le briefing: ${briefing.agent_id} → ${agentCode || 'INCONNU'} (nom: ${briefing.agent_nom || 'N/A'})`)
         }
       } catch (error) {
         errors++
