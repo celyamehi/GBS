@@ -55,7 +55,6 @@ export const ecoutesService = {
         id,
         agent_id,
         lien_audio,
-        audio_name,
         date_prise_rdv,
         date_rdv,
         statut_rdv,
@@ -65,7 +64,6 @@ export const ecoutesService = {
         remarques,
         numero_client,
         nom_client,
-        criteres,
         created_at,
         agents (
           nom,
@@ -81,7 +79,7 @@ export const ecoutesService = {
       agent_id: e.agent_id,
       lien_audio: e.lien_audio,
       audio_data: null, // N'existe plus dans la base
-      audio_name: e.audio_name,
+      audio_name: null, // N'existe pas dans la base
       date_prise_rdv: e.date_prise_rdv,
       date_rdv: e.date_rdv,
       statut_rdv: e.statut_rdv,
@@ -91,7 +89,7 @@ export const ecoutesService = {
       remarques: e.remarques,
       numero_client: e.numero_client,
       nom_client: e.nom_client,
-      criteres: e.criteres,
+      criteres: {}, // N'existe pas dans la base
       created_at: e.created_at,
       agent: e.agents?.[0] ? {
         id: '', // Pas retourné par la jointure
@@ -115,7 +113,6 @@ export const ecoutesService = {
         id,
         agent_id,
         lien_audio,
-        audio_name,
         date_prise_rdv,
         date_rdv,
         statut_rdv,
@@ -125,7 +122,6 @@ export const ecoutesService = {
         remarques,
         numero_client,
         nom_client,
-        criteres,
         created_at,
         agents (
           nom,
@@ -141,7 +137,7 @@ export const ecoutesService = {
       agent_id: data.agent_id,
       lien_audio: data.lien_audio,
       audio_data: null,
-      audio_name: data.audio_name,
+      audio_name: null,
       date_prise_rdv: data.date_prise_rdv,
       date_rdv: data.date_rdv,
       statut_rdv: data.statut_rdv,
@@ -151,7 +147,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
-      criteres: data.criteres,
+      criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
         id: '',
@@ -176,7 +172,6 @@ export const ecoutesService = {
         id,
         agent_id,
         lien_audio,
-        audio_name,
         date_prise_rdv,
         date_rdv,
         statut_rdv,
@@ -186,7 +181,6 @@ export const ecoutesService = {
         remarques,
         numero_client,
         nom_client,
-        criteres,
         created_at,
         agents (
           nom,
@@ -202,7 +196,7 @@ export const ecoutesService = {
       agent_id: data.agent_id,
       lien_audio: data.lien_audio,
       audio_data: null,
-      audio_name: data.audio_name,
+      audio_name: null,
       date_prise_rdv: data.date_prise_rdv,
       date_rdv: data.date_rdv,
       statut_rdv: data.statut_rdv,
@@ -212,7 +206,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
-      criteres: data.criteres,
+      criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
         id: '',
@@ -253,7 +247,6 @@ export const ecoutesService = {
         id,
         agent_id,
         lien_audio,
-        audio_name,
         date_prise_rdv,
         date_rdv,
         statut_rdv,
@@ -263,7 +256,6 @@ export const ecoutesService = {
         remarques,
         numero_client,
         nom_client,
-        criteres,
         created_at,
         agents (
           nom,
@@ -279,7 +271,7 @@ export const ecoutesService = {
       agent_id: data.agent_id,
       lien_audio: data.lien_audio,
       audio_data: null,
-      audio_name: data.audio_name,
+      audio_name: null,
       date_prise_rdv: data.date_prise_rdv,
       date_rdv: data.date_rdv,
       statut_rdv: data.statut_rdv,
@@ -289,7 +281,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
-      criteres: data.criteres,
+      criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
         id: '',
@@ -311,7 +303,6 @@ export const ecoutesService = {
         id,
         agent_id,
         lien_audio,
-        audio_name,
         date_prise_rdv,
         date_rdv,
         statut_rdv,
@@ -321,7 +312,6 @@ export const ecoutesService = {
         remarques,
         numero_client,
         nom_client,
-        criteres,
         created_at,
         agents (
           nom,
@@ -337,7 +327,7 @@ export const ecoutesService = {
       agent_id: data.agent_id,
       lien_audio: data.lien_audio,
       audio_data: null,
-      audio_name: data.audio_name,
+      audio_name: null,
       date_prise_rdv: data.date_prise_rdv,
       date_rdv: data.date_rdv,
       statut_rdv: data.statut_rdv,
@@ -347,7 +337,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
-      criteres: data.criteres,
+      criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
         id: '',
