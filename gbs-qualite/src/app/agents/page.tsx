@@ -4,12 +4,11 @@ import { useState } from 'react'
 import { Plus, Search, Edit2, UserX, UserCheck } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
-import { mockAgents } from '@/data/mockData'
 import { Agent } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useAgents } from '@/hooks/useSupabaseData'
 
 export default function AgentsPage() {
-  const [agents, setAgents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
+  const { agents, loading, error, createAgent, updateAgent, deleteAgent } = useAgents()
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null)
@@ -40,36 +39,59 @@ export default function AgentsPage() {
     setIsModalOpen(true)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.nom) return
 
-    if (editingAgent) {
-      setAgents(agents.map(a => 
-        a.id === editingAgent.id 
-          ? { ...a, ...formData }
-          : a
-      ))
-    } else {
-      const newAgent: Agent = {
-        id: Date.now().toString(),
-        nom: formData.nom,
-        code_agent: `AG${Date.now().toString().slice(-4)}`,
-        projet: 'Mutuelles',
-        actif: formData.actif,
-        created_at: new Date().toISOString()
+    try {
+      if (editingAgent) {
+        await updateAgent(editingAgent.id, formData)
+      } else {
+        const newAgent = {
+          nom: formData.nom,
+          code_agent: `AG${Date.now().toString().slice(-4)}`,
+          projet: 'Mutuelles',
+          actif: formData.actif
+        }
+        await createAgent(newAgent)
       }
-      setAgents([...agents, newAgent])
+      setIsModalOpen(false)
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error)
     }
-    setIsModalOpen(false)
   }
 
-  const toggleActif = (agent: Agent) => {
-    setAgents(agents.map(a => 
-      a.id === agent.id 
-        ? { ...a, actif: !a.actif }
-        : a
-    ))
+  const toggleActif = async (agent: Agent) => {
+    try {
+      await updateAgent(agent.id, { actif: !agent.actif })
+    } catch (error) {
+      console.error('Erreur lors du changement de statut:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7c3aed] mx-auto mb-4"></div>
+          <p className="text-[#6b7280]">Chargement des agents...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <UserX className="w-12 h-12 mx-auto" />
+          </div>
+          <p className="text-red-600 mb-2">Erreur de chargement</p>
+          <p className="text-[#6b7280] text-sm">{error}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
