@@ -3,13 +3,12 @@
 import { useState, useMemo } from 'react'
 import { BarChart3, TrendingUp, AlertTriangle, CheckCircle, User } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
-import { mockAgents, mockEcoutes } from '@/data/mockData'
 import { Agent, Ecoute, BLOCS_CRITERES } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
 
 export default function AnalysePage() {
-  const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
-  const [ecoutes] = useLocalStorage<Ecoute[]>('gbs-ecoutes', mockEcoutes)
+  const { agents } = useSupabaseAgents()
+  const { ecoutes } = useSupabaseEcoutes()
   const [selectedAgent, setSelectedAgent] = useState<string>('')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')

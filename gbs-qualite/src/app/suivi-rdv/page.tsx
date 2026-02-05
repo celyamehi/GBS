@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import { Search, Check, X } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
-import { mockAgents, mockEcoutes } from '@/data/mockData'
 import { Agent, Ecoute, STATUTS_RDV } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
 
 export default function SuiviRdvPage() {
-  const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
-  const [ecoutes, setEcoutes] = useLocalStorage<Ecoute[]>('gbs-ecoutes', mockEcoutes)
+  const { agents } = useSupabaseAgents()
+  const { ecoutes, updateEcoute: updateEcouteData } = useSupabaseEcoutes()
   const [filterAgent, setFilterAgent] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
   const [filterHonore, setFilterHonore] = useState<string>('')
@@ -33,10 +32,8 @@ export default function SuiviRdvPage() {
     return isQualiteValide && matchesAgent && matchesStatut && matchesHonore && matchesDateDebut && matchesDateFin
   })
 
-  const toggleHonore = (ecouteId: string, honore: boolean) => {
-    setEcoutes(ecoutes.map(e => 
-      e.id === ecouteId ? { ...e, rdv_honore: honore } : e
-    ))
+  const toggleHonore = async (ecouteId: string, honore: boolean) => {
+    await updateEcouteData(ecouteId, { rdv_honore: honore })
   }
 
   const getAgentName = (agentId: string) => {

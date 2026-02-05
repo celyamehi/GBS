@@ -4,13 +4,12 @@ import { useState, useMemo } from 'react'
 import { TrendingUp, Calendar, CheckCircle, XCircle } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
-import { mockAgents, mockEcoutes } from '@/data/mockData'
 import { Agent, Ecoute } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
 
 export default function StatistiquesPage() {
-  const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
-  const [ecoutes] = useLocalStorage<Ecoute[]>('gbs-ecoutes', mockEcoutes)
+  const { agents } = useSupabaseAgents()
+  const { ecoutes } = useSupabaseEcoutes()
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)

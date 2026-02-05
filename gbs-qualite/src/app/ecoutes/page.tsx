@@ -4,15 +4,15 @@ import { useState } from 'react'
 import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
-import { mockAgents, mockEcoutes, PROJETS } from '@/data/mockData'
+import { PROJETS } from '@/data/mockData'
 import { Agent, Ecoute, BLOCS_CRITERES, STATUTS_RDV } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
 import { uploadAudioFile } from '@/lib/storage'
 import Link from 'next/link'
 
 export default function EcoutesPage() {
-  const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
-  const [ecoutes, setEcoutes] = useLocalStorage<Ecoute[]>('gbs-ecoutes', mockEcoutes)
+  const { agents, loading: agentsLoading } = useSupabaseAgents()
+  const { ecoutes, loading: ecoutesLoading, addEcoute, updateEcoute: updateEcouteData, deleteEcoute: removeEcoute } = useSupabaseEcoutes()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAgent, setFilterAgent] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
@@ -165,8 +165,7 @@ export default function EcoutesPage() {
     }
 
     if (editingEcoute) {
-      const updatedEcoute: Ecoute = {
-        ...editingEcoute,
+      const updatedData = {
         agent_id: formData.agent_id,
         date_prise_rdv: formData.date_prise_rdv,
         date_rdv: formData.date_rdv,
@@ -182,12 +181,9 @@ export default function EcoutesPage() {
         lien_audio: audioUrl || editingEcoute.lien_audio || null,
         criteres: { ...criteres }
       }
-      setEcoutes(ecoutes.map(ec => 
-        ec.id === editingEcoute.id ? updatedEcoute : ec
-      ))
+      await updateEcouteData(editingEcoute.id, updatedData)
     } else {
-      const newEcoute: Ecoute = {
-        id: ecouteId,
+      const newEcouteData = {
         agent_id: formData.agent_id,
         lien_audio: audioUrl || null,
         audio_data: null,
@@ -201,10 +197,9 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
-        criteres: { ...criteres },
-        created_at: new Date().toISOString()
+        criteres: { ...criteres }
       }
-      setEcoutes([...ecoutes, newEcoute])
+      await addEcoute(newEcouteData)
     }
     
     setIsUploading(false)
@@ -219,16 +214,28 @@ export default function EcoutesPage() {
     return new Date(dateStr).toLocaleDateString('fr-FR')
   }
 
-  const toggleQualite = (ecouteId: string) => {
-    setEcoutes(ecoutes.map(ec => 
-      ec.id === ecouteId ? { ...ec, rdv_qualite: !ec.rdv_qualite } : ec
-    ))
+  const toggleQualite = async (ecouteId: string) => {
+    const ecoute = ecoutes.find(e => e.id === ecouteId)
+    if (ecoute) {
+      await updateEcouteData(ecouteId, { rdv_qualite: !ecoute.rdv_qualite })
+    }
   }
 
-  const deleteEcoute = (ecouteId: string) => {
+  const deleteEcoute = async (ecouteId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette écoute ?')) {
-      setEcoutes(ecoutes.filter(ec => ec.id !== ecouteId))
+      await removeEcoute(ecouteId)
     }
+  }
+
+  if (agentsLoading || ecoutesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7c3aed] mx-auto mb-4"></div>
+          <p className="text-[#6b7280]">Chargement des données...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

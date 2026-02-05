@@ -3,13 +3,13 @@
 import { useState, useMemo } from 'react'
 import { Trophy, Medal, Award } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
-import { mockAgents, mockEcoutes, PROJETS } from '@/data/mockData'
+import { PROJETS } from '@/data/mockData'
 import { Agent, Ecoute } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useSupabaseAgents, useSupabaseEcoutes } from '@/hooks/useSupabaseData'
 
 export default function ClassementPage() {
-  const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
-  const [ecoutes] = useLocalStorage<Ecoute[]>('gbs-ecoutes', mockEcoutes)
+  const { agents } = useSupabaseAgents()
+  const { ecoutes } = useSupabaseEcoutes()
   const [filterProjet, setFilterProjet] = useState('')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')

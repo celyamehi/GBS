@@ -4,13 +4,12 @@ import { useState } from 'react'
 import { Search, Plus, Copy, Sparkles, Check } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
-import { mockAgents, mockBriefings } from '@/data/mockData'
 import { Agent, Briefing } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useSupabaseAgents, useSupabaseBriefings } from '@/hooks/useSupabaseData'
 
 export default function BriefingsPage() {
-  const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
-  const [briefings, setBriefings] = useLocalStorage<Briefing[]>('gbs-briefings', mockBriefings)
+  const { agents } = useSupabaseAgents()
+  const { briefings, addBriefing } = useSupabaseBriefings()
   const [filterAgent, setFilterAgent] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
@@ -60,22 +59,22 @@ export default function BriefingsPage() {
 
   const handleSaveManualBriefing = async () => {
     if (!newBriefingData.agent_id || !newBriefingData.remarques) return
-    
-    const newBriefing: Briefing = {
-      id: Date.now().toString(),
+
+    const briefingData = {
       agent_id: newBriefingData.agent_id,
       date_briefing: new Date().toISOString().split('T')[0],
       type: 'manuel',
-      contenu: newBriefingData.remarques,
-      created_at: new Date().toISOString()
+      contenu: newBriefingData.remarques
     }
 
-    setBriefings([newBriefing, ...briefings])
-    setIsModalOpen(false)
-    setNewBriefingData({ agent_id: '', remarques: '' })
-    
-    setSelectedBriefing(newBriefing)
-    setIsDetailOpen(true)
+    const newBriefing = await addBriefing(briefingData)
+    if (newBriefing) {
+      setIsModalOpen(false)
+      setNewBriefingData({ agent_id: '', remarques: '' })
+      
+      setSelectedBriefing(newBriefing)
+      setIsDetailOpen(true)
+    }
   }
 
   const generateDailyBriefings = async () => {
@@ -120,7 +119,9 @@ Maintenir un taux de qualité élevé et sécuriser les RDV pris.`,
     }
 
     if (newBriefings.length > 0) {
-      setBriefings([...newBriefings, ...briefings])
+      for (const briefing of newBriefings) {
+        await addBriefing(briefing)
+      }
     }
     
     setIsGenerating(false)
