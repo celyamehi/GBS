@@ -26,7 +26,6 @@ export default function EcoutesPage() {
   const [formData, setFormData] = useState({
     agent_id: '',
     lien_audio: '',
-    audio_data: '' as string | null,
     audio_name: '' as string | null,
     date_prise_rdv: '',
     date_rdv: '',
@@ -94,7 +93,6 @@ export default function EcoutesPage() {
       setFormData({
         agent_id: ecoute.agent_id,
         lien_audio: ecoute.lien_audio || '',
-        audio_data: null,
         audio_name: ecoute.audio_name || null,
         date_prise_rdv: ecoute.date_prise_rdv,
         date_rdv: ecoute.date_rdv,
@@ -125,7 +123,6 @@ export default function EcoutesPage() {
       setFormData({
         agent_id: activeAgents[0]?.id || '',
         lien_audio: '',
-        audio_data: null,
         audio_name: null,
         date_prise_rdv: new Date().toISOString().split('T')[0],
         date_rdv: '',
@@ -176,7 +173,6 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
-        audio_data: null,
         audio_name: audioName || editingEcoute.audio_name,
         lien_audio: audioUrl || editingEcoute.lien_audio || null,
         criteres: { ...criteres }
@@ -186,7 +182,6 @@ export default function EcoutesPage() {
       const newEcouteData = {
         agent_id: formData.agent_id,
         lien_audio: audioUrl || null,
-        audio_data: null,
         audio_name: audioName,
         date_prise_rdv: formData.date_prise_rdv,
         date_rdv: formData.date_rdv,
@@ -504,7 +499,7 @@ export default function EcoutesPage() {
                         <p className="text-xs text-[#6b7280]">
                           {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
                         </p>
-                      ) : formData.audio_data && (
+                      ) : audioUrl && (
                         <p className="text-xs text-[#10b981]">Audio disponible</p>
                       )}
                     </div>
@@ -513,9 +508,9 @@ export default function EcoutesPage() {
                     type="button"
                     onClick={() => {
                       setAudioFile(null)
-                      if (audioUrl && !formData.audio_data) URL.revokeObjectURL(audioUrl)
+                      if (audioUrl) URL.revokeObjectURL(audioUrl)
                       setAudioUrl(null)
-                      setFormData({ ...formData, lien_audio: '', audio_data: null, audio_name: null })
+                      setFormData({ ...formData, lien_audio: '', audio_name: null })
                     }}
                     className="p-2 rounded-lg hover:bg-[#ffd6e0] transition-colors"
                   >
