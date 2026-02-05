@@ -4,13 +4,12 @@ import { useState } from 'react'
 import { Search, Plus, Copy, Sparkles, Check } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
-import { mockAgents, mockBriefings } from '@/data/mockData'
 import { Agent, Briefing } from '@/lib/supabase'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useAgents } from '@/hooks/useSupabaseData'
 
 export default function BriefingsPage() {
-  const [agents] = useLocalStorage<Agent[]>('gbs-agents', mockAgents)
-  const [briefings, setBriefings] = useLocalStorage<Briefing[]>('gbs-briefings', mockBriefings)
+  const { agents } = useAgents()
+  const [briefings, setBriefings] = useState<Briefing[]>([])
   const [filterAgent, setFilterAgent] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
