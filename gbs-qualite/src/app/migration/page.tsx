@@ -46,6 +46,49 @@ export default function MigrationPage() {
     }
   }
 
+  const diagnoseData = () => {
+    const { agents, ecoutes, briefings } = getDataFromLocalStorage()
+    
+    addLog('🔍 DIAGNOSTIC DES DONNÉES LOCALSTORAGE')
+    addLog('')
+    
+    // Diagnostiquer les agents
+    addLog(`👥 AGENTS (${agents.length}):`)
+    agents.forEach((agent: any, index: number) => {
+      addLog(`   ${index + 1}. ${agent.nom} - Code: ${agent.code_agent || 'N/A'} - ID: ${agent.id || 'N/A'}`)
+    })
+    addLog('')
+    
+    // Diagnostiquer les écoutes
+    addLog(`🎧 ÉCOUTES (${ecoutes.length}):`)
+    const uniqueAgentIds = new Set()
+    ecoutes.forEach((ecoute: any, index: number) => {
+      uniqueAgentIds.add(ecoute.agent_id)
+      if (index < 10) { // Limiter l'affichage
+        addLog(`   ${index + 1}. Agent ID: ${ecoute.agent_id} - Date: ${ecoute.date_rdv} - Nom: ${ecoute.agent_nom || 'N/A'}`)
+      }
+    })
+    if (ecoutes.length > 10) {
+      addLog(`   ... et ${ecoutes.length - 10} autres`)
+    }
+    addLog(`   IDs d'agents uniques trouvés: ${Array.from(uniqueAgentIds).join(', ')}`)
+    addLog('')
+    
+    // Diagnostiquer les briefings
+    addLog(`📝 BRIEFINGS (${briefings.length}):`)
+    briefings.forEach((briefing: any, index: number) => {
+      if (index < 5) { // Limiter l'affichage
+        addLog(`   ${index + 1}. Agent ID: ${briefing.agent_id} - Date: ${briefing.date_briefing} - Nom: ${briefing.agent_nom || 'N/A'}`)
+      }
+    })
+    if (briefings.length > 5) {
+      addLog(`   ... et ${briefings.length - 5} autres`)
+    }
+    
+    addLog('')
+    addLog('✅ Diagnostic terminé')
+  }
+
   const migrateAgents = async (agents: any[]): Promise<number> => {
     let imported = 0
     let errors = 0
@@ -88,11 +131,24 @@ export default function MigrationPage() {
     let imported = 0
     let errors = 0
 
+    // Récupérer tous les agents une seule fois
+    const agents = await getAgents()
+    
     for (const ecoute of ecoutes) {
       try {
-        // Récupérer les agents pour trouver l'ID correspondant
-        const agents = await getAgents()
-        const agent = agents.find(a => a.code_agent === ecoute.agent_id)
+        // Chercher l'agent par code_agent
+        let agent = agents.find(a => a.code_agent === ecoute.agent_id)
+        
+        // Si pas trouvé, essayer par nom (au cas où)
+        if (!agent && ecoute.agent_nom) {
+          agent = agents.find(a => a.nom.toLowerCase() === ecoute.agent_nom.toLowerCase())
+        }
+        
+        // Si toujours pas trouvé, essayer par correspondance partielle
+        if (!agent) {
+          addLog(`🔍 Recherche avancée pour agent_id: ${ecoute.agent_id}`)
+          addLog(`   Agents disponibles: ${agents.map(a => `${a.nom} (${a.code_agent})`).join(', ')}`)
+        }
         
         if (agent) {
           const ecouteData = {
@@ -115,14 +171,14 @@ export default function MigrationPage() {
           const result = await createEcoute(ecouteData)
           if (result) {
             imported++
-            addLog(`✅ Écoute importée: ${ecoute.date_rdv} - ${agent.nom}`)
+            addLog(`✅ Écoute importée: ${ecoute.date_rdv} - ${agent.nom} (${agent.code_agent})`)
           } else {
             errors++
             addLog(`❌ Erreur import écoute: ${ecoute.date_rdv}`)
           }
         } else {
           errors++
-          addLog(`❌ Agent non trouvé pour l'écoute: ${ecoute.agent_id}`)
+          addLog(`❌ Agent non trouvé pour l'écoute: ${ecoute.agent_id} (nom: ${ecoute.agent_nom || 'N/A'})`)
         }
       } catch (error) {
         errors++
@@ -137,11 +193,18 @@ export default function MigrationPage() {
     let imported = 0
     let errors = 0
 
+    // Récupérer tous les agents une seule fois
+    const agents = await getAgents()
+
     for (const briefing of briefings) {
       try {
-        // Récupérer les agents pour trouver l'ID correspondant
-        const agents = await getAgents()
-        const agent = agents.find(a => a.code_agent === briefing.agent_id)
+        // Chercher l'agent par code_agent
+        let agent = agents.find(a => a.code_agent === briefing.agent_id)
+        
+        // Si pas trouvé, essayer par nom
+        if (!agent && briefing.agent_nom) {
+          agent = agents.find(a => a.nom.toLowerCase() === briefing.agent_nom.toLowerCase())
+        }
         
         if (agent) {
           const briefingData = {
@@ -154,14 +217,14 @@ export default function MigrationPage() {
           const result = await createBriefing(briefingData)
           if (result) {
             imported++
-            addLog(`✅ Briefing importé: ${briefing.date_briefing} - ${agent.nom}`)
+            addLog(`✅ Briefing importé: ${briefing.date_briefing} - ${agent.nom} (${agent.code_agent})`)
           } else {
             errors++
             addLog(`❌ Erreur import briefing: ${briefing.date_briefing}`)
           }
         } else {
           errors++
-          addLog(`❌ Agent non trouvé pour le briefing: ${briefing.agent_id}`)
+          addLog(`❌ Agent non trouvé pour le briefing: ${briefing.agent_id} (nom: ${briefing.agent_nom || 'N/A'})`)
         }
       } catch (error) {
         errors++
@@ -319,6 +382,15 @@ export default function MigrationPage() {
             Actions
           </h3>
           <div className="space-y-4">
+            <button
+              onClick={diagnoseData}
+              disabled={isMigrating}
+              className="btn-secondary w-full flex items-center justify-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4" />
+              Diagnostiquer les données
+            </button>
+
             <button
               onClick={startMigration}
               disabled={isMigrating}
