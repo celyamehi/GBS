@@ -167,7 +167,6 @@ export default function MigrationPage() {
           const ecouteData = {
             agent_id: agent.id,
             lien_audio: ecoute.lien_audio || null,
-            audio_data: ecoute.audio_data || null,
             audio_name: ecoute.audio_name || null,
             date_prise_rdv: ecoute.date_prise_rdv,
             date_rdv: ecoute.date_rdv,
