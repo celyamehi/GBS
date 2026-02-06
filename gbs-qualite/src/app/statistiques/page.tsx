@@ -30,29 +30,37 @@ export default function StatistiquesPage() {
   // Écoutes du mois en cours (pour la vue globale)
   const currentMonthEcoutes = useMemo(() => {
     return ecoutes.filter(ecoute => 
-      ecoute.date_rdv.substring(0, 7) === currentMonth &&
-      (ecoute.statut_rdv === 'Validé qualité' || ecoute.statut_rdv === '2ème passage')
+      ecoute.date_rdv.substring(0, 7) === currentMonth
+      // Prendre TOUS les RDV du mois, pas seulement certains statuts
     )
   }, [ecoutes, currentMonth])
 
-  // Stats du mois en cours (vue globale)
+  // Stats du mois en cours (vue globale) - selon la nouvelle logique
   const globalStats = useMemo(() => {
-    const total = currentMonthEcoutes.length
-    const qualite = currentMonthEcoutes.filter(e => e.rdv_qualite).length
-    const nonQualite = total - qualite
-    const annules = currentMonthEcoutes.filter(e => e.statut_rdv === 'Annulé').length
-    const honores = currentMonthEcoutes.filter(e => e.rdv_honore === true).length
-    const nonHonores = currentMonthEcoutes.filter(e => e.rdv_honore === false).length
+    const totalRdv = currentMonthEcoutes.length
+    
+    // RDV confirmés (confirmation === 'Confirmer')
+    const rdvConfirme = currentMonthEcoutes.filter(e => e.confirmation === 'Confirmer').length
+    
+    // RDV honorés (suivi === 'Honore')
+    const rdvHonore = currentMonthEcoutes.filter(e => e.suivi === 'Honore').length
+    
+    // RDV NRP (suivi === 'NRP')
+    const rdvNrp = currentMonthEcoutes.filter(e => e.suivi === 'NRP').length
+    
+    // Calcul des taux selon la nouvelle logique
+    const tauxConfirme = totalRdv > 0 ? (rdvConfirme / totalRdv) * 100 : 0
+    const tauxHonore = totalRdv > 0 ? (rdvHonore / totalRdv) * 100 : 0
+    const tauxNrp = totalRdv > 0 ? (rdvNrp / totalRdv) * 100 : 0
 
     return {
-      total,
-      qualite,
-      nonQualite,
-      tauxQualite: total > 0 ? (qualite / total) * 100 : 0,
-      annules,
-      honores,
-      nonHonores,
-      tauxHonore: (honores + nonHonores) > 0 ? (honores / (honores + nonHonores)) * 100 : 0
+      totalRdv,
+      rdvConfirme,
+      rdvHonore,
+      rdvNrp,
+      tauxConfirme,
+      tauxHonore,
+      tauxNrp
     }
   }, [currentMonthEcoutes])
 
@@ -188,44 +196,45 @@ export default function StatistiquesPage() {
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard 
-          label="Total RDV"
-          value={globalStats.total}
+          label="Total RDV programmés"
+          value={globalStats.totalRdv}
           icon={<Calendar className="w-6 h-6 text-[#7c3aed]" />}
           color="#ede9fe"
         />
         <StatCard 
-          label="RDV Qualité"
-          value={`${globalStats.qualite} (${globalStats.tauxQualite.toFixed(1)}%)`}
+          label="RDV confirmés"
+          value={`${globalStats.rdvConfirme} (${globalStats.tauxConfirme.toFixed(1)}%)`}
           icon={<CheckCircle className="w-6 h-6 text-[#10b981]" />}
           color="#d4edda"
         />
         <StatCard 
-          label="RDV Annulés"
-          value={globalStats.annules}
-          icon={<XCircle className="w-6 h-6 text-[#ef4444]" />}
-          color="#ffd6e0"
-        />
-        <StatCard 
-          label="Taux Honoré"
-          value={`${globalStats.tauxHonore.toFixed(1)}%`}
+          label="RDV honorés"
+          value={`${globalStats.rdvHonore} (${globalStats.tauxHonore.toFixed(1)}%)`}
           icon={<TrendingUp className="w-6 h-6 text-[#f59e0b]" />}
           color="#fff3cd"
+        />
+        <StatCard 
+          label="RDV NRP"
+          value={`${globalStats.rdvNrp} (${globalStats.tauxNrp.toFixed(1)}%)`}
+          icon={<XCircle className="w-6 h-6 text-[#ef4444]" />}
+          color="#ffd6e0"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         <div className="card p-6">
-          <h3 className="font-semibold text-[#1a1a2e] mb-4">Répartition Qualité</h3>
+          <h3 className="font-semibold text-[#1a1a2e] mb-4">Répartition Confirmés</h3>
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="h-8 bg-[#e5e7eb] rounded-full overflow-hidden flex">
                 <div 
                   className="h-full bg-[#10b981] transition-all"
-                  style={{ width: `${globalStats.tauxQualite}%` }}
+                  style={{ width: `${globalStats.tauxConfirme}%` }}
                 />
                 <div 
                   className="h-full bg-[#ef4444] transition-all"
-                  style={{ width: `${100 - globalStats.tauxQualite}%` }}
+                  style={{ width: `${100 - globalStats.tauxConfirme}%` }}
                 />
               </div>
             </div>
@@ -233,11 +242,11 @@ export default function StatistiquesPage() {
           <div className="flex justify-between mt-3 text-sm">
             <span className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#10b981]"></span>
-              Qualité: {globalStats.qualite}
+              Confirmés: {globalStats.rdvConfirme}
             </span>
             <span className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
-              Non qualité: {globalStats.nonQualite}
+              Non confirmés: {globalStats.totalRdv - globalStats.rdvConfirme}
             </span>
           </div>
         </div>
@@ -248,7 +257,7 @@ export default function StatistiquesPage() {
             <div className="flex-1">
               <div className="h-8 bg-[#e5e7eb] rounded-full overflow-hidden flex">
                 <div 
-                  className="h-full bg-[#10b981] transition-all"
+                  className="h-full bg-[#f59e0b] transition-all"
                   style={{ width: `${globalStats.tauxHonore}%` }}
                 />
                 <div 
@@ -260,15 +269,44 @@ export default function StatistiquesPage() {
           </div>
           <div className="flex justify-between mt-3 text-sm">
             <span className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#10b981]"></span>
-              Honorés: {globalStats.honores}
+              <span className="w-3 h-3 rounded-full bg-[#f59e0b]"></span>
+              Honorés: {globalStats.rdvHonore}
             </span>
             <span className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
-              Non honorés: {globalStats.nonHonores}
+              Non honorés: {globalStats.totalRdv - globalStats.rdvHonore}
             </span>
           </div>
         </div>
+
+        <div className="card p-6">
+          <h3 className="font-semibold text-[#1a1a2e] mb-4">Répartition NRP</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="h-8 bg-[#e5e7eb] rounded-full overflow-hidden flex">
+                <div 
+                  className="h-full bg-[#ef4444] transition-all"
+                  style={{ width: `${globalStats.tauxNrp}%` }}
+                />
+                <div 
+                  className="h-full bg-[#10b981] transition-all"
+                  style={{ width: `${100 - globalStats.tauxNrp}%` }}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between mt-3 text-sm">
+            <span className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#ef4444]"></span>
+              NRP: {globalStats.rdvNrp}
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#10b981]"></span>
+              Non NRP: {globalStats.totalRdv - globalStats.rdvNrp}
+            </span>
+          </div>
+        </div>
+      </div>
       </div>
 
       <h2 className="text-lg font-semibold text-[#1a1a2e] mb-4">Vue par agent</h2>
