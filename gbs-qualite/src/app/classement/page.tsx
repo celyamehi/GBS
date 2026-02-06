@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Trophy, Medal, Award, X } from 'lucide-react'
+import { Trophy, Medal, Award, X, Download } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import { Agent, Ecoute } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
 import { PROJETS } from '@/data/mockData'
+import { exportTableToPDF } from '@/utils/pdfExport'
 
 export default function ClassementPage() {
   const { agents, loading: agentsLoading, error: agentsError } = useAgents()
@@ -68,10 +69,29 @@ export default function ClassementPage() {
   }
 
   const getRankBg = (index: number) => {
-    if (index === 0) return 'bg-[#fff3cd]'
+    if (index === 0) return 'bg-[#fef3c7]'
     if (index === 1) return 'bg-[#f3f4f6]'
-    if (index === 2) return 'bg-[#ffe5d0]'
+    if (index === 2) return 'bg-[#fef9c3]'
     return ''
+  }
+
+  const handleExportPDF = async () => {
+    const dateRange = dateDebut && dateFin 
+      ? `du ${new Date(dateDebut).toLocaleDateString('fr-FR')} au ${new Date(dateFin).toLocaleDateString('fr-FR')}`
+      : 'toutes périodes'
+    
+    const projectFilter = filterProjet ? `Projet: ${filterProjet}` : 'Tous projets'
+    
+    const filename = `classement_${new Date().toISOString().split('T')[0]}.pdf`
+    const title = 'Classement des Agents'
+    const additionalInfo = `${projectFilter} | ${dateRange} | Total agents: ${classement.length}`
+    
+    const success = await exportTableToPDF('classement-table', filename, title, additionalInfo)
+    if (success) {
+      console.log('PDF du classement exporté avec succès')
+    } else {
+      alert('Erreur lors de l\'export PDF du classement')
+    }
   }
 
   if (agentsLoading || ecoutesLoading) {
@@ -104,6 +124,15 @@ export default function ClassementPage() {
       <PageHeader 
         title="Classement des Agents"
         description="Classement par taux de qualité (meilleur → pire)"
+        action={
+          <button 
+            onClick={handleExportPDF}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Exporter PDF
+          </button>
+        }
       />
 
       <div className="card p-6 mb-6">
@@ -143,7 +172,7 @@ export default function ClassementPage() {
       </div>
 
       <div className="card">
-        <div className="table-container">
+        <div id="classement-table" className="table-container">
           <table>
             <thead>
               <tr>

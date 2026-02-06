@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { TrendingUp, Calendar, CheckCircle, XCircle } from 'lucide-react'
+import { TrendingUp, Calendar, CheckCircle, XCircle, Download } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { Agent, Ecoute } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
+import { exportToPDF, exportTableToPDF } from '@/utils/pdfExport'
 
 export default function StatistiquesPage() {
   const { agents, loading: agentsLoading, error: agentsError } = useAgents()
@@ -133,6 +134,29 @@ export default function StatistiquesPage() {
     return agents.find(a => a.id === agentId)?.nom || 'Agent inconnu'
   }
 
+  const handleExportPDF = async () => {
+    const filename = `statistiques_${currentMonth.replace('-', '_')}.pdf`
+    const title = `Statistiques - ${currentMonthName}`
+    const success = await exportToPDF('stats-content', filename, title)
+    if (success) {
+      console.log('PDF exporté avec succès')
+    } else {
+      alert('Erreur lors de l\'export PDF')
+    }
+  }
+
+  const handleExportTablePDF = async () => {
+    const filename = `classement_agents_${currentMonth.replace('-', '_')}.pdf`
+    const title = `Classement des Agents - ${currentMonthName}`
+    const additionalInfo = `Période: ${currentMonthName} | Total agents: ${agentStats.length}`
+    const success = await exportTableToPDF('agent-table', filename, title, additionalInfo)
+    if (success) {
+      console.log('PDF du tableau exporté avec succès')
+    } else {
+      alert('Erreur lors de l\'export PDF du tableau')
+    }
+  }
+
   if (agentsLoading || ecoutesLoading) {
     return (
       <div className="animate-fade-in flex items-center justify-center min-h-screen">
@@ -163,9 +187,19 @@ export default function StatistiquesPage() {
       <PageHeader 
         title="Statistiques"
         description="Vue globale et par agent sur la qualité et l'honorisation"
+        action={
+          <button 
+            onClick={handleExportPDF}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Exporter PDF
+          </button>
+        }
       />
 
-      <div className="card p-6 mb-6">
+      <div id="stats-content" className="space-y-6">
+        <div className="card p-6 mb-6">
         <div className="flex flex-wrap gap-4">
           <div className="w-48">
             <label className="block text-sm font-medium text-[#6b7280] mb-2">Date début</label>
@@ -309,9 +343,18 @@ export default function StatistiquesPage() {
       </div>
       </div>
 
-      <h2 className="text-lg font-semibold text-[#1a1a2e] mb-4">Vue par agent</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-[#1a1a2e]">Vue par agent</h2>
+        <button 
+          onClick={handleExportTablePDF}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Exporter tableau PDF
+        </button>
+      </div>
       <div className="card mb-6">
-        <div className="table-container">
+        <div id="agent-table" className="table-container">
           <table>
             <thead>
               <tr>
@@ -428,6 +471,7 @@ export default function StatistiquesPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
