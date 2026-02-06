@@ -15,6 +15,7 @@ export default function SuiviRdvPage() {
   const [filterStatut, setFilterStatut] = useState('')
   const [filterSuivi, setFilterSuivi] = useState<string>('')
   const [filterConfirmation, setFilterConfirmation] = useState<string>('')
+  const [filterNumeroClient, setFilterNumeroClient] = useState('')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
 
@@ -28,10 +29,11 @@ export default function SuiviRdvPage() {
     const matchesStatut = !filterStatut || ecoute.statut_rdv === filterStatut
     const matchesSuivi = !filterSuivi || ecoute.suivi === filterSuivi
     const matchesConfirmation = !filterConfirmation || ecoute.confirmation === filterConfirmation
+    const matchesNumeroClient = !filterNumeroClient || ecoute.numero_client?.toLowerCase().includes(filterNumeroClient.toLowerCase())
     const matchesDateDebut = !dateDebut || ecoute.date_rdv >= dateDebut
     const matchesDateFin = !dateFin || ecoute.date_rdv <= dateFin
     
-    return isQualiteValide && matchesAgent && matchesProjet && matchesStatut && matchesSuivi && matchesConfirmation && matchesDateDebut && matchesDateFin
+    return isQualiteValide && matchesAgent && matchesProjet && matchesStatut && matchesSuivi && matchesConfirmation && matchesNumeroClient && matchesDateDebut && matchesDateFin
   })
 
   const handleToggleHonore = async (ecouteId: string, honore: boolean) => {
@@ -204,6 +206,16 @@ export default function SuiviRdvPage() {
               <option value="NRP">NRP</option>
             </select>
           </div>
+          <div className="w-48">
+            <label className="block text-sm font-medium text-[#6b7280] mb-2">Numéro client</label>
+            <input
+              type="text"
+              value={filterNumeroClient}
+              onChange={(e) => setFilterNumeroClient(e.target.value)}
+              className="input-field"
+              placeholder="Rechercher..."
+            />
+          </div>
           <div className="w-40">
             <label className="block text-sm font-medium text-[#6b7280] mb-2">Date début</label>
             <input
@@ -224,7 +236,7 @@ export default function SuiviRdvPage() {
           </div>
         </div>
         
-        {(filterAgent || filterProjet || filterStatut || filterSuivi || filterConfirmation || dateDebut || dateFin) && (
+        {(filterAgent || filterProjet || filterStatut || filterSuivi || filterConfirmation || filterNumeroClient || dateDebut || dateFin) && (
           <button
             onClick={() => {
               setFilterAgent('')
@@ -232,6 +244,7 @@ export default function SuiviRdvPage() {
               setFilterStatut('')
               setFilterSuivi('')
               setFilterConfirmation('')
+              setFilterNumeroClient('')
               setDateDebut('')
               setDateFin('')
             }}
@@ -251,6 +264,7 @@ export default function SuiviRdvPage() {
                 <th>Projet</th>
                 <th>Date prise RDV</th>
                 <th>Date RDV</th>
+                <th>Numéro client</th>
                 <th>Qualité</th>
                 <th>Statut RDV</th>
                 <th className="text-center">Suivi</th>
@@ -260,7 +274,7 @@ export default function SuiviRdvPage() {
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={9} className="text-center py-8 text-[#6b7280]">
                     Aucun RDV trouvé
                   </td>
                 </tr>
@@ -271,6 +285,7 @@ export default function SuiviRdvPage() {
                     <td className="text-[#6b7280]">{ecoute.projet || '-'}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_prise_rdv)}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
+                    <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
                     <td>
                       <span className={`badge ${ecoute.rdv_qualite ? 'badge-success' : 'badge-danger'}`}>
                         {ecoute.rdv_qualite ? 'Qualité' : 'Non qualité'}
