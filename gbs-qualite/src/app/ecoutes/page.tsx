@@ -7,6 +7,7 @@ import Modal from '@/components/Modal'
 import { Agent, Ecoute, BLOCS_CRITERES, STATUTS_RDV } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
 import { uploadAudioFile } from '@/lib/storage'
+import { PROJETS } from '@/data/mockData'
 import Link from 'next/link'
 
 export default function EcoutesPage() {
@@ -14,6 +15,7 @@ export default function EcoutesPage() {
   const { ecoutes, loading: ecoutesLoading, error: ecoutesError, createEcoute, updateEcoute, deleteEcoute, toggleQualite: toggleQualiteSupabase } = useEcoutes()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAgent, setFilterAgent] = useState('')
+  const [filterProjet, setFilterProjet] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
   const [filterDateRdvDebut, setFilterDateRdvDebut] = useState('')
   const [filterDateRdvFin, setFilterDateRdvFin] = useState('')
@@ -24,6 +26,7 @@ export default function EcoutesPage() {
   
   const [formData, setFormData] = useState({
     agent_id: '',
+    projet: 'GBS Conseille',
     lien_audio: '',
     audio_data: '' as string | null,
     audio_name: '' as string | null,
@@ -57,6 +60,7 @@ export default function EcoutesPage() {
       ecoute.statut_rdv.toLowerCase().includes(searchLower)
     
     const matchesAgent = !filterAgent || ecoute.agent_id === filterAgent
+    const matchesProjet = !filterProjet || ecoute.projet === filterProjet
     const matchesStatut = !filterStatut || ecoute.statut_rdv === filterStatut
     
     // Filtres par date RDV
@@ -67,7 +71,7 @@ export default function EcoutesPage() {
     const matchesDatePriseDebut = !filterDatePriseDebut || ecoute.date_prise_rdv >= filterDatePriseDebut
     const matchesDatePriseFin = !filterDatePriseFin || ecoute.date_prise_rdv <= filterDatePriseFin
     
-    return matchesSearch && matchesAgent && matchesStatut && 
+    return matchesSearch && matchesAgent && matchesProjet && matchesStatut && 
            matchesDateRdvDebut && matchesDateRdvFin && 
            matchesDatePriseDebut && matchesDatePriseFin
   })
@@ -92,6 +96,7 @@ export default function EcoutesPage() {
       setEditingEcoute(ecoute)
       setFormData({
         agent_id: ecoute.agent_id,
+        projet: ecoute.projet || 'GBS Conseille',
         lien_audio: ecoute.lien_audio || '',
         audio_data: null,
         audio_name: ecoute.audio_name || null,
@@ -123,6 +128,7 @@ export default function EcoutesPage() {
       setEditingEcoute(null)
       setFormData({
         agent_id: activeAgents[0]?.id || '',
+        projet: 'GBS Conseille',
         lien_audio: '',
         audio_data: null,
         audio_name: null,
@@ -183,6 +189,7 @@ export default function EcoutesPage() {
       }
       await updateEcoute(editingEcoute.id, {
         agent_id: formData.agent_id,
+        projet: formData.projet,
         date_prise_rdv: formData.date_prise_rdv,
         date_rdv: formData.date_rdv,
         statut_rdv: formData.statut_rdv,
@@ -199,6 +206,7 @@ export default function EcoutesPage() {
     } else {
       await createEcoute({
         agent_id: formData.agent_id,
+        projet: formData.projet,
         lien_audio: audioUrl || null,
         audio_data: null,
         audio_name: audioName,
@@ -314,6 +322,18 @@ export default function EcoutesPage() {
           </div>
           <div className="w-48">
             <select
+              value={filterProjet}
+              onChange={(e) => setFilterProjet(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Tous les projets</option>
+              {PROJETS.map(projet => (
+                <option key={projet} value={projet}>{projet}</option>
+              ))}
+            </select>
+          </div>
+          <div className="w-48">
+            <select
               value={filterStatut}
               onChange={(e) => setFilterStatut(e.target.value)}
               className="input-field"
@@ -365,11 +385,12 @@ export default function EcoutesPage() {
             />
           </div>
           
-          {(searchTerm || filterAgent || filterStatut || filterDateRdvDebut || filterDateRdvFin || filterDatePriseDebut || filterDatePriseFin) && (
+          {(searchTerm || filterAgent || filterProjet || filterStatut || filterDateRdvDebut || filterDateRdvFin || filterDatePriseDebut || filterDatePriseFin) && (
             <button
               onClick={() => {
                 setSearchTerm('')
                 setFilterAgent('')
+                setFilterProjet('')
                 setFilterStatut('')
                 setFilterDateRdvDebut('')
                 setFilterDateRdvFin('')
@@ -390,6 +411,7 @@ export default function EcoutesPage() {
             <thead>
               <tr>
                 <th>Agent</th>
+                <th>Projet</th>
                 <th>Date prise RDV</th>
                 <th>Date RDV</th>
                 <th>Numéro client</th>
@@ -403,7 +425,7 @@ export default function EcoutesPage() {
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={10} className="text-center py-8 text-[#6b7280]">
                     Aucune écoute trouvée
                   </td>
                 </tr>
@@ -411,6 +433,7 @@ export default function EcoutesPage() {
                 filteredEcoutes.map(ecoute => (
                   <tr key={ecoute.id}>
                     <td className="font-medium">{getAgentName(ecoute.agent_id)}</td>
+                    <td className="text-[#6b7280]">{ecoute.projet || '-'}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_prise_rdv)}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
                     <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
@@ -580,6 +603,21 @@ export default function EcoutesPage() {
                 <option value="">Sélectionner un agent</option>
                 {activeAgents.map(agent => (
                   <option key={agent.id} value={agent.id}>{agent.nom}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                Projet *
+              </label>
+              <select
+                value={formData.projet}
+                onChange={(e) => setFormData({ ...formData, projet: e.target.value })}
+                className="input-field"
+                required
+              >
+                {PROJETS.map(projet => (
+                  <option key={projet} value={projet}>{projet}</option>
                 ))}
               </select>
             </div>

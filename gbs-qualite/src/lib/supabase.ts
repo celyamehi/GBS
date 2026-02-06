@@ -17,6 +17,7 @@ export type Agent = {
 export type Ecoute = {
   id: string
   agent_id: string
+  projet: string
   lien_audio: string | null
   audio_data: string | null
   audio_name: string | null

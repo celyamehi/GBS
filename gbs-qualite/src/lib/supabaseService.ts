@@ -46,7 +46,7 @@ export const agentsService = {
   }
 }
 
-// Service pour les écoutes
+// Service pour les écoutes - Version corrigée 2024
 export const ecoutesService = {
   async getAll(): Promise<Ecoute[]> {
     const { data, error } = await supabase
@@ -54,6 +54,7 @@ export const ecoutesService = {
       .select(`
         id,
         agent_id,
+        projet,
         lien_audio,
         date_prise_rdv,
         date_rdv,
@@ -77,6 +78,7 @@ export const ecoutesService = {
     return data?.map(e => ({
       id: e.id,
       agent_id: e.agent_id,
+      projet: e.projet || 'GBS Conseille', // Valeur par défaut
       lien_audio: e.lien_audio,
       audio_data: null, // N'existe plus dans la base
       audio_name: null, // N'existe pas dans la base
@@ -112,6 +114,7 @@ export const ecoutesService = {
       .select(`
         id,
         agent_id,
+        projet,
         lien_audio,
         date_prise_rdv,
         date_rdv,
@@ -135,6 +138,7 @@ export const ecoutesService = {
     return {
       id: data.id,
       agent_id: data.agent_id,
+      projet: data.projet || 'GBS Conseille',
       lien_audio: data.lien_audio,
       audio_data: null,
       audio_name: null,
@@ -171,6 +175,7 @@ export const ecoutesService = {
       .select(`
         id,
         agent_id,
+        projet,
         lien_audio,
         date_prise_rdv,
         date_rdv,
@@ -194,6 +199,7 @@ export const ecoutesService = {
     return {
       id: data.id,
       agent_id: data.agent_id,
+      projet: data.projet || 'GBS Conseille',
       lien_audio: data.lien_audio,
       audio_data: null,
       audio_name: null,
@@ -246,6 +252,7 @@ export const ecoutesService = {
       .select(`
         id,
         agent_id,
+        projet,
         lien_audio,
         date_prise_rdv,
         date_rdv,
@@ -269,6 +276,7 @@ export const ecoutesService = {
     return {
       id: data.id,
       agent_id: data.agent_id,
+      projet: data.projet || 'GBS Conseille',
       lien_audio: data.lien_audio,
       audio_data: null,
       audio_name: null,
@@ -302,6 +310,7 @@ export const ecoutesService = {
       .select(`
         id,
         agent_id,
+        projet,
         lien_audio,
         date_prise_rdv,
         date_rdv,
@@ -325,6 +334,7 @@ export const ecoutesService = {
     return {
       id: data.id,
       agent_id: data.agent_id,
+      projet: data.projet || 'GBS Conseille',
       lien_audio: data.lien_audio,
       audio_data: null,
       audio_name: null,
