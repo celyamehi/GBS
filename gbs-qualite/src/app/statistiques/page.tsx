@@ -191,7 +191,7 @@ export default function StatistiquesPage() {
         </p>
       </div>
 
-      <h2 className="text-lg font-semibold text-[#1a1a2e] mb-4">
+      <h2 className="text-2xl font-bold text-[#1a1a2e] mb-6 bg-gradient-to-r from-[#7c3aed] to-[#a78bfa] bg-clip-text text-transparent">
         Vue globale - {currentMonthName}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
