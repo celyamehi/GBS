@@ -245,6 +245,14 @@ export default function EcoutesPage() {
     }
   }
 
+  const handleUpdateStatutRdv = async (ecouteId: string, statutRdv: string) => {
+    try {
+      await updateEcoute(ecouteId, { statut_rdv: statutRdv })
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut RDV:', error)
+    }
+  }
+
   const handleDeleteEcoute = async (ecouteId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette écoute ?')) {
       try {
@@ -418,8 +426,7 @@ export default function EcoutesPage() {
                 <th>Date RDV</th>
                 <th>Numéro client</th>
                 <th>Nom client</th>
-                <th>Statut</th>
-                <th>Qualité</th>
+                <th>Statut RDV</th>
                 <th>Note</th>
                 <th>Actions</th>
               </tr>
@@ -427,7 +434,7 @@ export default function EcoutesPage() {
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={9} className="text-center py-8 text-[#6b7280]">
                     Aucune écoute trouvée
                   </td>
                 </tr>
@@ -441,22 +448,15 @@ export default function EcoutesPage() {
                     <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
                     <td className="text-[#6b7280]">{ecoute.nom_client || '-'}</td>
                     <td>
-                      <span className={`badge ${
-                        ecoute.statut_rdv === 'Validé qualité' ? 'badge-success' :
-                        ecoute.statut_rdv === 'Annulé' ? 'badge-danger' :
-                        'badge-warning'
-                      }`}>
-                        {ecoute.statut_rdv}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => handleToggleQualite(ecoute.id)}
-                        className={`badge cursor-pointer hover:opacity-80 transition-opacity ${ecoute.rdv_qualite ? 'badge-success' : 'badge-danger'}`}
-                        title="Cliquer pour changer"
+                      <select
+                        value={ecoute.statut_rdv}
+                        onChange={(e) => handleUpdateStatutRdv(ecoute.id, e.target.value)}
+                        className="w-full min-w-[120px] text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        {ecoute.rdv_qualite ? 'Qualité' : 'Non qualité'}
-                      </button>
+                        <option value="2ème passage">2ème passage</option>
+                        <option value="Validé qualité">RDV QUALITE</option>
+                        <option value="Annulé">Annulé</option>
+                      </select>
                     </td>
                     <td>
                       <span className="font-semibold text-[#7c3aed]">{ecoute.note_globale}/10</span>
