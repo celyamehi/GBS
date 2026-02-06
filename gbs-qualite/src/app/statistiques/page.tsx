@@ -198,8 +198,7 @@ export default function StatistiquesPage() {
         }
       />
 
-      <div id="stats-content" className="space-y-6">
-        <div className="card p-6 mb-6">
+      <div className="card p-6 mb-6">
         <div className="flex flex-wrap gap-4">
           <div className="w-48">
             <label className="block text-sm font-medium text-[#6b7280] mb-2">Date début</label>
@@ -224,6 +223,8 @@ export default function StatistiquesPage() {
           Les filtres de date s'appliquent à la vue par agent. La vue globale affiche les stats du mois en cours.
         </p>
       </div>
+
+      <div id="stats-content" className="space-y-6">
 
       <h2 className="text-2xl font-bold text-[#1a1a2e] mb-6 bg-gradient-to-r from-[#7c3aed] to-[#a78bfa] bg-clip-text text-transparent">
         Vue globale - {currentMonthName}
