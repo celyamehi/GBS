@@ -9,7 +9,7 @@ import { PROJETS } from '@/data/mockData'
 
 export default function SuiviRdvPage() {
   const { agents, loading: agentsLoading, error: agentsError } = useAgents()
-  const { ecoutes, loading: ecoutesLoading, error: ecoutesError, toggleHonore: toggleHonoreSupabase } = useEcoutes()
+  const { ecoutes, loading: ecoutesLoading, error: ecoutesError, toggleHonore: toggleHonoreSupabase, updateEcoute } = useEcoutes()
   const [filterAgent, setFilterAgent] = useState('')
   const [filterProjet, setFilterProjet] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
@@ -39,6 +39,22 @@ export default function SuiviRdvPage() {
       await toggleHonoreSupabase(ecouteId, honore)
     } catch (error) {
       console.error('Erreur lors du changement de statut:', error)
+    }
+  }
+
+  const handleUpdateSuivi = async (ecouteId: string, suivi: string | null) => {
+    try {
+      await updateEcoute(ecouteId, { suivi })
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du suivi:', error)
+    }
+  }
+
+  const handleUpdateConfirmation = async (ecouteId: string, confirmation: string | null) => {
+    try {
+      await updateEcoute(ecouteId, { confirmation })
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la confirmation:', error)
     }
   }
 
@@ -269,33 +285,29 @@ export default function SuiviRdvPage() {
                         {ecoute.statut_rdv}
                       </span>
                     </td>
-                    <td className="text-center">{ecoute.suivi || '-'}</td>
-                    <td className="text-center">{ecoute.confirmation || '-'}</td>
-                    <td>
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleToggleHonore(ecoute.id, true)}
-                          className={`p-2 rounded-lg transition-all ${
-                            ecoute.rdv_honore === true 
-                              ? 'bg-[#d4edda] text-[#10b981]' 
-                              : 'hover:bg-[#d4edda] text-[#6b7280] hover:text-[#10b981]'
-                          }`}
-                          title="Marquer comme honoré"
-                        >
-                          <Check className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleHonore(ecoute.id, false)}
-                          className={`p-2 rounded-lg transition-all ${
-                            ecoute.rdv_honore === false 
-                              ? 'bg-[#ffd6e0] text-[#ef4444]' 
-                              : 'hover:bg-[#ffd6e0] text-[#6b7280] hover:text-[#ef4444]'
-                          }`}
-                          title="Marquer comme non honoré"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
+                    <td className="text-center">
+                      <select
+                        value={ecoute.suivi || ''}
+                        onChange={(e) => handleUpdateSuivi(ecoute.id, e.target.value || null)}
+                        className="input-field text-sm py-1 px-2"
+                      >
+                        <option value="">-</option>
+                        <option value="Honore">Honoré</option>
+                        <option value="NRP">NRP</option>
+                        <option value="Annuler">Annuler</option>
+                        <option value="HC">HC</option>
+                      </select>
+                    </td>
+                    <td className="text-center">
+                      <select
+                        value={ecoute.confirmation || ''}
+                        onChange={(e) => handleUpdateConfirmation(ecoute.id, e.target.value || null)}
+                        className="input-field text-sm py-1 px-2"
+                      >
+                        <option value="">-</option>
+                        <option value="Confirmer">Confirmer</option>
+                        <option value="NRP">NRP</option>
+                      </select>
                     </td>
                   </tr>
                 ))
