@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio, Trash2 } from 'lucide-react'
+import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio, Trash2, Check } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
-import { Agent, Ecoute, BLOCS_CRITERES, STATUTS_RDV } from '@/lib/supabase'
+import { Agent, Ecoute, STATUTS_RDV } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
 import { uploadAudioFile } from '@/lib/storage'
 import { PROJETS } from '@/data/mockData'
@@ -41,7 +41,6 @@ export default function EcoutesPage() {
     nom_client: ''
   })
 
-  const [criteres, setCriteres] = useState<Record<string, { respecte: boolean; commentaire: string }>>({})
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -76,16 +75,6 @@ export default function EcoutesPage() {
            matchesDatePriseDebut && matchesDatePriseFin
   })
 
-  const initCriteres = () => {
-    const initial: Record<string, { respecte: boolean; commentaire: string }> = {}
-    Object.entries(BLOCS_CRITERES).forEach(([blocKey, bloc]) => {
-      bloc.criteres.forEach(critere => {
-        initial[`${blocKey}_${critere}`] = { respecte: false, commentaire: '' }
-      })
-    })
-    return initial
-  }
-
   const openModal = (ecoute?: Ecoute) => {
     // Reset audio states
     setAudioFile(null)
@@ -117,13 +106,6 @@ export default function EcoutesPage() {
       } else {
         setAudioUrl(null)
       }
-      // Restaurer les critères sauvegardés ou initialiser
-      console.log('Ecoute criteres:', ecoute.criteres)
-      if (ecoute.criteres && Object.keys(ecoute.criteres).length > 0) {
-        setCriteres(ecoute.criteres)
-      } else {
-        setCriteres(initCriteres())
-      }
     } else {
       setEditingEcoute(null)
       setFormData({
@@ -142,7 +124,6 @@ export default function EcoutesPage() {
         numero_client: '',
         nom_client: ''
       })
-      setCriteres(initCriteres())
     }
     setIsModalOpen(true)
   }
@@ -170,23 +151,6 @@ export default function EcoutesPage() {
     }
 
     if (editingEcoute) {
-      const updatedEcoute: Ecoute = {
-        ...editingEcoute,
-        agent_id: formData.agent_id,
-        date_prise_rdv: formData.date_prise_rdv,
-        date_rdv: formData.date_rdv,
-        statut_rdv: formData.statut_rdv,
-        rdv_qualite: formData.rdv_qualite,
-        rdv_honore: formData.rdv_honore,
-        note_globale: formData.note_globale,
-        remarques: formData.remarques || null,
-        numero_client: formData.numero_client || null,
-        nom_client: formData.nom_client || null,
-        audio_data: null,
-        audio_name: audioName || editingEcoute.audio_name,
-        lien_audio: audioUrl || editingEcoute.lien_audio || null,
-        criteres: { ...criteres }
-      }
       await updateEcoute(editingEcoute.id, {
         agent_id: formData.agent_id,
         projet: formData.projet,
@@ -201,7 +165,7 @@ export default function EcoutesPage() {
         nom_client: formData.nom_client || null,
         lien_audio: audioUrl || editingEcoute.lien_audio || null,
         audio_name: audioName || editingEcoute.audio_name,
-        criteres: { ...criteres }
+        criteres: editingEcoute.criteres || {}
       })
     } else {
       await createEcoute({
@@ -221,7 +185,7 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
-        criteres: { ...criteres }
+        criteres: {}
       })
     }
     
@@ -308,13 +272,13 @@ export default function EcoutesPage() {
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b7280]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6b7280] w-4 h-4" />
               <input
                 type="text"
-                placeholder="Rechercher (agent, client, numéro...)"
+                placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-field pl-11"
+                className="pl-10 pr-4 py-2 w-full border border-[#e8e8e8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c3aed] focus:border-transparent"
               />
             </div>
           </div>
@@ -354,64 +318,42 @@ export default function EcoutesPage() {
               ))}
             </select>
           </div>
-        </div>
-        
-        <div className="flex flex-wrap gap-4 mt-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-[#1a1a2e]">Date RDV:</label>
-            <input
-              type="date"
-              value={filterDateRdvDebut}
-              onChange={(e) => setFilterDateRdvDebut(e.target.value)}
-              className="input-field w-40"
-              placeholder="Du"
-            />
-            <span className="text-[#6b7280]">au</span>
-            <input
-              type="date"
-              value={filterDateRdvFin}
-              onChange={(e) => setFilterDateRdvFin(e.target.value)}
-              className="input-field w-40"
-              placeholder="Au"
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-[#1a1a2e]">Date prise RDV:</label>
+          <div className="w-40">
             <input
               type="date"
               value={filterDatePriseDebut}
               onChange={(e) => setFilterDatePriseDebut(e.target.value)}
-              className="input-field w-40"
-              placeholder="Du"
+              className="input-field"
+              placeholder="Date prise début"
             />
-            <span className="text-[#6b7280]">au</span>
+          </div>
+          <div className="w-40">
             <input
               type="date"
               value={filterDatePriseFin}
               onChange={(e) => setFilterDatePriseFin(e.target.value)}
-              className="input-field w-40"
-              placeholder="Au"
+              className="input-field"
+              placeholder="Date prise fin"
             />
           </div>
-          
-          {(searchTerm || filterAgent || filterProjet || filterStatut || filterDateRdvDebut || filterDateRdvFin || filterDatePriseDebut || filterDatePriseFin) && (
-            <button
-              onClick={() => {
-                setSearchTerm('')
-                setFilterAgent('')
-                setFilterProjet('')
-                setFilterStatut('')
-                setFilterDateRdvDebut('')
-                setFilterDateRdvFin('')
-                setFilterDatePriseDebut('')
-                setFilterDatePriseFin('')
-              }}
-              className="btn-secondary text-sm"
-            >
-              Réinitialiser les filtres
-            </button>
-          )}
+          <div className="w-40">
+            <input
+              type="date"
+              value={filterDateRdvDebut}
+              onChange={(e) => setFilterDateRdvDebut(e.target.value)}
+              className="input-field"
+              placeholder="Date RDV début"
+            />
+          </div>
+          <div className="w-40">
+            <input
+              type="date"
+              value={filterDateRdvFin}
+              onChange={(e) => setFilterDateRdvFin(e.target.value)}
+              className="input-field"
+              placeholder="Date RDV fin"
+            />
+          </div>
         </div>
       </div>
 
@@ -428,13 +370,15 @@ export default function EcoutesPage() {
                 <th>Nom client</th>
                 <th>Statut RDV</th>
                 <th>Note</th>
+                <th>Remarques</th>
+                <th>Audio</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={11} className="text-center py-8 text-[#6b7280]">
                     Aucune écoute trouvée
                   </td>
                 </tr>
@@ -453,41 +397,63 @@ export default function EcoutesPage() {
                         onChange={(e) => handleUpdateStatutRdv(ecoute.id, e.target.value)}
                         className={`w-full min-w-[120px] text-sm border rounded-md px-2 py-1 font-medium focus:outline-none focus:ring-2 ${
                           ecoute.statut_rdv === 'Validé qualité' ? 'bg-green-50 border-green-300 text-green-800 focus:ring-green-500' :
+                          ecoute.statut_rdv === '2ème passage' ? 'bg-yellow-50 border-yellow-300 text-yellow-800 focus:ring-yellow-500' :
                           ecoute.statut_rdv === 'Annulé' ? 'bg-red-50 border-red-300 text-red-800 focus:ring-red-500' :
-                          'bg-yellow-50 border-yellow-300 text-yellow-800 focus:ring-yellow-500'
+                          'bg-white border-gray-300 text-gray-700 focus:ring-blue-500'
                         }`}
                       >
-                        <option value="2ème passage" className="bg-white text-gray-700">2ème passage</option>
-                        <option value="Validé qualité" className="bg-white text-gray-700">RDV QUALITE</option>
-                        <option value="Annulé" className="bg-white text-gray-700">Annulé</option>
+                        {STATUTS_RDV.map(statut => (
+                          <option key={statut} value={statut}>{statut}</option>
+                        ))}
                       </select>
                     </td>
-                    <td>
-                      <span className="font-semibold text-[#7c3aed]">{ecoute.note_globale}/10</span>
+                    <td className="text-center">
+                      <span className={`font-semibold ${
+                        ecoute.note_globale >= 7 ? 'text-[#10b981]' :
+                        ecoute.note_globale >= 5 ? 'text-[#f59e0b]' :
+                        'text-[#ef4444]'
+                      }`}>
+                        {ecoute.note_globale}/10
+                      </span>
                     </td>
-                    <td>
-                      <div className="flex items-center gap-2">
+                    <td className="max-w-[150px] truncate text-sm text-[#6b7280]">
+                      {ecoute.remarques || '-'}
+                    </td>
+                    <td className="text-center">
+                      {ecoute.lien_audio ? (
+                        <a
+                          href={ecoute.lien_audio}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#7c3aed] hover:text-[#5b21b6] transition-colors"
+                        >
+                          <Headphones className="w-4 h-4" />
+                        </a>
+                      ) : (
+                        <span className="text-[#6b7280]">-</span>
+                      )}
+                    </td>
+                    <td className="text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => openModal(ecoute)}
-                          className="p-2 rounded-lg hover:bg-[#ede9fe] transition-colors"
+                          className="p-1 rounded hover:bg-[#f3f4f6] transition-colors"
                           title="Modifier"
                         >
-                          <Edit2 className="w-4 h-4 text-[#7c3aed]" />
+                          <Edit2 className="w-4 h-4 text-[#6b7280]" />
                         </button>
-                        {ecoute.lien_audio && (
-                          <a
-                            href={ecoute.lien_audio}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-lg hover:bg-[#c1e3ff] transition-colors"
-                            title="Écouter l'audio"
-                          >
-                            <ExternalLink className="w-4 h-4 text-[#1e40af]" />
-                          </a>
-                        )}
+                        <button
+                          onClick={() => handleToggleQualite(ecoute.id)}
+                          className={`p-1 rounded transition-colors ${
+                            ecoute.rdv_qualite ? 'bg-green-100 hover:bg-green-200' : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
+                          title={ecoute.rdv_qualite ? 'Retirer qualité' : 'Marquer comme qualité'}
+                        >
+                          <Check className="w-4 h-4 text-[#10b981]" />
+                        </button>
                         <button
                           onClick={() => handleDeleteEcoute(ecoute.id)}
-                          className="p-2 rounded-lg hover:bg-[#ffd6e0] transition-colors"
+                          className="p-1 rounded hover:bg-[#fee2e2] transition-colors"
                           title="Supprimer"
                         >
                           <Trash2 className="w-4 h-4 text-[#ef4444]" />
@@ -714,68 +680,6 @@ export default function EcoutesPage() {
               className="input-field min-h-[100px]"
               placeholder="Vos observations sur cet appel..."
             />
-          </div>
-
-          <div className="border-t border-[#e8e8e8] pt-6">
-            <h3 className="text-lg font-semibold text-[#1a1a2e] mb-4">Grille d'évaluation</h3>
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {Object.entries(BLOCS_CRITERES).map(([blocKey, bloc]) => {
-                const allChecked = bloc.criteres.every(critere => criteres[`${blocKey}_${critere}`]?.respecte)
-                const toggleAll = (checked: boolean) => {
-                  const newCriteres = { ...criteres }
-                  bloc.criteres.forEach(critere => {
-                    const key = `${blocKey}_${critere}`
-                    newCriteres[key] = { ...newCriteres[key], respecte: checked }
-                  })
-                  setCriteres(newCriteres)
-                }
-                return (
-                <div key={blocKey} className="criteria-block">
-                  <div 
-                    className="criteria-header flex items-center justify-between"
-                    style={{ backgroundColor: bloc.couleur }}
-                  >
-                    <span>{bloc.titre}</span>
-                    <label className="flex items-center gap-2 cursor-pointer text-sm font-normal">
-                      <input
-                        type="checkbox"
-                        checked={allChecked}
-                        onChange={(e) => toggleAll(e.target.checked)}
-                        className="checkbox-custom"
-                      />
-                      Tout cocher
-                    </label>
-                  </div>
-                  {bloc.criteres.map(critere => {
-                    const key = `${blocKey}_${critere}`
-                    return (
-                      <div key={key} className="criteria-item">
-                        <input
-                          type="checkbox"
-                          checked={criteres[key]?.respecte || false}
-                          onChange={(e) => setCriteres({
-                            ...criteres,
-                            [key]: { ...criteres[key], respecte: e.target.checked }
-                          })}
-                          className="checkbox-custom"
-                        />
-                        <span className="flex-1 text-sm">{critere}</span>
-                        <input
-                          type="text"
-                          value={criteres[key]?.commentaire || ''}
-                          onChange={(e) => setCriteres({
-                            ...criteres,
-                            [key]: { ...criteres[key], commentaire: e.target.value }
-                          })}
-                          className="input-field w-40 text-xs"
-                          placeholder="Commentaire..."
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-              )})}
-            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#e8e8e8]">
