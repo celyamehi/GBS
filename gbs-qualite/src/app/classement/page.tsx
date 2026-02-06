@@ -18,43 +18,46 @@ export default function ClassementPage() {
     const activeAgents = agents.filter(a => a.actif)
     
     return activeAgents.map(agent => {
+      // Filtrer les écoutes de cet agent
       let agentEcoutes = ecoutes.filter(e => e.agent_id === agent.id)
       
-      if (filterProjet && agent.projet !== filterProjet) {
-        return null
+      // Filtrer par projet (sur les écoutes, pas sur l'agent)
+      if (filterProjet) {
+        agentEcoutes = agentEcoutes.filter(e => e.projet === filterProjet)
       }
       
+      // Filtrer par dates (sur la date de prise de RDV)
       if (dateDebut) {
-        agentEcoutes = agentEcoutes.filter(e => e.date_rdv >= dateDebut)
+        agentEcoutes = agentEcoutes.filter(e => e.date_prise_rdv >= dateDebut)
       }
       if (dateFin) {
-        agentEcoutes = agentEcoutes.filter(e => e.date_rdv <= dateFin)
+        agentEcoutes = agentEcoutes.filter(e => e.date_prise_rdv <= dateFin)
       }
 
-      // Filtrer uniquement les RDV "Validé qualité" et "2ème passage"
-      const rdvQualiteValides = agentEcoutes.filter(e => 
-        e.statut_rdv === 'Validé qualité' || e.statut_rdv === '2ème passage'
-      )
+      // Total de RDV pris (tous les RDV, pas seulement les validés)
+      const totalRdv = agentEcoutes.length
       
-      const totalRdv = rdvQualiteValides.length
-      const rdvQualite = rdvQualiteValides.filter(e => e.rdv_qualite).length
-      const rdvNonQualite = totalRdv - rdvQualite
+      // RDV Qualité : statut_rdv === 'Validé qualité'
+      const rdvQualite = agentEcoutes.filter(e => e.statut_rdv === 'Validé qualité').length
+      
+      // RDV Non Qualité : statut_rdv === '2ème passage' ou 'Annulé'
+      const rdvNonQualite = agentEcoutes.filter(e => 
+        e.statut_rdv === '2ème passage' || e.statut_rdv === 'Annulé'
+      ).length
+      
+      // Taux qualité : (RDV Qualité / Total RDV) * 100
       const tauxQualite = totalRdv > 0 ? (rdvQualite / totalRdv) * 100 : 0
-      const rdvHonores = rdvQualiteValides.filter(e => e.rdv_honore === true).length
-      const rdvNonHonores = rdvQualiteValides.filter(e => e.rdv_honore === false).length
 
       return {
         agent,
         totalRdv,
         rdvQualite,
         rdvNonQualite,
-        tauxQualite,
-        rdvHonores,
-        rdvNonHonores
+        tauxQualite
       }
     })
-    .filter(Boolean)
-    .sort((a, b) => b!.tauxQualite - a!.tauxQualite)
+    .filter(item => item.totalRdv > 0) // Ne garder que les agents avec au moins 1 RDV
+    .sort((a, b) => b.tauxQualite - a.tauxQualite)
   }, [agents, ecoutes, filterProjet, dateDebut, dateFin])
 
   const getRankIcon = (index: number) => {
@@ -151,14 +154,12 @@ export default function ClassementPage() {
                 <th className="text-center">RDV Qualité</th>
                 <th className="text-center">RDV Non Qualité</th>
                 <th className="text-center">Taux Qualité</th>
-                <th className="text-center">Honorés</th>
-                <th className="text-center">Non Honorés</th>
               </tr>
             </thead>
             <tbody>
               {classement.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={7} className="text-center py-8 text-[#6b7280]">
                     Aucun agent trouvé
                   </td>
                 </tr>
@@ -191,12 +192,6 @@ export default function ClassementPage() {
                         </div>
                         <span className="font-bold text-[#7c3aed]">{item.tauxQualite.toFixed(1)}%</span>
                       </div>
-                    </td>
-                    <td className="text-center">
-                      <span className="text-[#10b981] font-semibold">{item.rdvHonores}</span>
-                    </td>
-                    <td className="text-center">
-                      <span className="text-[#ef4444] font-semibold">{item.rdvNonHonores}</span>
                     </td>
                   </tr>
                 ))
