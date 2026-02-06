@@ -59,6 +59,14 @@ export default function SuiviRdvPage() {
     }
   }
 
+  const handleUpdateStatutRdv = async (ecouteId: string, statutRdv: string) => {
+    try {
+      await updateEcoute(ecouteId, { statut_rdv: statutRdv })
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut RDV:', error)
+    }
+  }
+
   const getAgentName = (agentId: string) => {
     return agents.find(a => a.id === agentId)?.nom || 'Agent inconnu'
   }
@@ -264,7 +272,6 @@ export default function SuiviRdvPage() {
                 <th>Date prise RDV</th>
                 <th>Date RDV</th>
                 <th>Numéro client</th>
-                <th>Qualité</th>
                 <th>Statut RDV</th>
                 <th className="text-center">Suivi</th>
                 <th className="text-center">Confirmation</th>
@@ -273,7 +280,7 @@ export default function SuiviRdvPage() {
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={8} className="text-center py-8 text-[#6b7280]">
                     Aucun RDV trouvé
                   </td>
                 </tr>
@@ -286,18 +293,15 @@ export default function SuiviRdvPage() {
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
                     <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
                     <td>
-                      <span className={`badge ${ecoute.rdv_qualite ? 'badge-success' : 'badge-danger'}`}>
-                        {ecoute.rdv_qualite ? 'Qualité' : 'Non qualité'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${
-                        ecoute.statut_rdv === 'Validé qualité' ? 'badge-success' :
-                        ecoute.statut_rdv === 'Annulé' ? 'badge-danger' :
-                        'badge-warning'
-                      }`}>
-                        {ecoute.statut_rdv}
-                      </span>
+                      <select
+                        value={ecoute.statut_rdv}
+                        onChange={(e) => handleUpdateStatutRdv(ecoute.id, e.target.value)}
+                        className="w-full min-w-[120px] text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="2ème passage">2ème passage</option>
+                        <option value="Validé qualité">RDV QUALITE</option>
+                        <option value="Annulé">Annulé</option>
+                      </select>
                     </td>
                     <td className="text-center py-2">
                       <select
