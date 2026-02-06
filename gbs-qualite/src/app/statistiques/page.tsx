@@ -60,33 +60,38 @@ export default function StatistiquesPage() {
     const activeAgents = agents.filter(a => a.actif)
 
     return activeAgents.map(agent => {
-      // Filtrer uniquement les RDV Validé qualité et 2ème passage
-      const agentEcoutes = filteredEcoutes.filter(e => 
-        e.agent_id === agent.id &&
-        (e.statut_rdv === 'Validé qualité' || e.statut_rdv === '2ème passage')
-      )
-      const total = agentEcoutes.length
-      const qualite = agentEcoutes.filter(e => e.rdv_qualite).length
-      const honores = agentEcoutes.filter(e => e.rdv_honore === true).length
-      const nonHonores = agentEcoutes.filter(e => e.rdv_honore === false).length
-      const annules = agentEcoutes.filter(e => e.statut_rdv === 'Annulé').length
-      const noteMoyenne = total > 0 
-        ? agentEcoutes.reduce((sum, e) => sum + e.note_globale, 0) / total 
-        : 0
+      // Filtrer tous les RDV de cet agent selon les dates
+      const agentEcoutes = filteredEcoutes.filter(e => e.agent_id === agent.id)
+      
+      // Total des RDV programmés (tous les RDV)
+      const totalRdv = agentEcoutes.length
+      
+      // RDV confirmés (confirmation === 'Confirmer')
+      const rdvConfirme = agentEcoutes.filter(e => e.confirmation === 'Confirmer').length
+      
+      // RDV honorés (suivi === 'Honore')
+      const rdvHonore = agentEcoutes.filter(e => e.suivi === 'Honore').length
+      
+      // RDV NRP (suivi === 'NRP')
+      const rdvNrp = agentEcoutes.filter(e => e.suivi === 'NRP').length
+      
+      // Calcul des taux
+      const tauxConfirme = totalRdv > 0 ? (rdvConfirme / totalRdv) * 100 : 0
+      const tauxHonore = totalRdv > 0 ? (rdvHonore / totalRdv) * 100 : 0
+      const tauxNrp = totalRdv > 0 ? (rdvNrp / totalRdv) * 100 : 0
 
       return {
         agent,
-        total,
-        qualite,
-        nonQualite: total - qualite,
-        tauxQualite: total > 0 ? (qualite / total) * 100 : 0,
-        honores,
-        nonHonores,
-        tauxHonore: (honores + nonHonores) > 0 ? (honores / (honores + nonHonores)) * 100 : 0,
-        annules,
-        noteMoyenne
+        totalRdv,
+        rdvConfirme,
+        rdvHonore,
+        rdvNrp,
+        tauxConfirme,
+        tauxHonore,
+        tauxNrp
       }
-    }).sort((a, b) => b.tauxQualite - a.tauxQualite)
+    }).filter(stat => stat.totalRdv > 0) // Ne garder que les agents avec au moins 1 RDV
+     .sort((a, b) => b.tauxConfirme - a.tauxConfirme) // Trier par taux de confirmation
   }, [agents, filteredEcoutes])
 
   const selectedAgentData = useMemo(() => {
@@ -272,19 +277,20 @@ export default function StatistiquesPage() {
           <table>
             <thead>
               <tr>
-                <th>Agent</th>
-                <th className="text-center">Total</th>
-                <th className="text-center">Qualité</th>
-                <th className="text-center">Taux Qualité</th>
-                <th className="text-center">Honorés</th>
-                <th className="text-center">Taux Honoré</th>
-                <th className="text-center">Note Moy.</th>
+                <th>Nom agent</th>
+                <th className="text-center">Total RDV programmés</th>
+                <th className="text-center">RDV confirmés</th>
+                <th className="text-center">RDV honorés</th>
+                <th className="text-center">RDV NRP</th>
+                <th className="text-center">Taux confirmés</th>
+                <th className="text-center">Taux honorés</th>
+                <th className="text-center">Taux NRP</th>
               </tr>
             </thead>
             <tbody>
               {agentStats.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={8} className="text-center py-8 text-[#6b7280]">
                     Aucune donnée disponible
                   </td>
                 </tr>
@@ -296,33 +302,48 @@ export default function StatistiquesPage() {
                     onClick={() => setSelectedAgent(selectedAgent === stat.agent.id ? null : stat.agent.id)}
                   >
                     <td className="font-medium">{stat.agent.nom}</td>
-                    <td className="text-center font-semibold">{stat.total}</td>
+                    <td className="text-center font-semibold">{stat.totalRdv}</td>
                     <td className="text-center">
-                      <span className="text-[#10b981]">{stat.qualite}</span>
-                      <span className="text-[#6b7280]"> / </span>
-                      <span className="text-[#ef4444]">{stat.nonQualite}</span>
+                      <span className="text-[#10b981] font-semibold">{stat.rdvConfirme}</span>
+                    </td>
+                    <td className="text-center">
+                      <span className="text-[#f59e0b] font-semibold">{stat.rdvHonore}</span>
+                    </td>
+                    <td className="text-center">
+                      <span className="text-[#ef4444] font-semibold">{stat.rdvNrp}</span>
                     </td>
                     <td className="text-center">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-16 h-2 bg-[#e5e7eb] rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-[#7c3aed] to-[#a78bfa] rounded-full"
-                            style={{ width: `${stat.tauxQualite}%` }}
+                            className="h-full bg-gradient-to-r from-[#10b981] to-[#34d399] rounded-full"
+                            style={{ width: `${stat.tauxConfirme}%` }}
                           />
                         </div>
-                        <span className="font-bold text-[#7c3aed] text-sm">{stat.tauxQualite.toFixed(0)}%</span>
+                        <span className="font-bold text-[#10b981] text-sm">{stat.tauxConfirme.toFixed(1)}%</span>
                       </div>
                     </td>
                     <td className="text-center">
-                      <span className="text-[#10b981]">{stat.honores}</span>
-                      <span className="text-[#6b7280]"> / </span>
-                      <span className="text-[#ef4444]">{stat.nonHonores}</span>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-16 h-2 bg-[#e5e7eb] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-[#f59e0b] to-[#fbbf24] rounded-full"
+                            style={{ width: `${stat.tauxHonore}%` }}
+                          />
+                        </div>
+                        <span className="font-bold text-[#f59e0b] text-sm">{stat.tauxHonore.toFixed(1)}%</span>
+                      </div>
                     </td>
                     <td className="text-center">
-                      <span className="font-semibold text-[#f59e0b]">{stat.tauxHonore.toFixed(0)}%</span>
-                    </td>
-                    <td className="text-center">
-                      <span className="font-semibold text-[#7c3aed]">{stat.noteMoyenne.toFixed(1)}/10</span>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-16 h-2 bg-[#e5e7eb] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-[#ef4444] to-[#f87171] rounded-full"
+                            style={{ width: `${stat.tauxNrp}%` }}
+                          />
+                        </div>
+                        <span className="font-bold text-[#ef4444] text-sm">{stat.tauxNrp.toFixed(1)}%</span>
+                      </div>
                     </td>
                   </tr>
                 ))
