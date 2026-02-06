@@ -215,6 +215,8 @@ export default function EcoutesPage() {
         statut_rdv: formData.statut_rdv,
         rdv_qualite: formData.rdv_qualite,
         rdv_honore: formData.rdv_honore,
+        suivi: null,
+        confirmation: null,
         note_globale: formData.note_globale,
         remarques: formData.remarques || null,
         numero_client: formData.numero_client || null,
