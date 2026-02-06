@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Check, X } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Search, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import { Agent, Ecoute, STATUTS_RDV } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
@@ -18,8 +18,37 @@ export default function SuiviRdvPage() {
   const [filterNumeroClient, setFilterNumeroClient] = useState('')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
+  const [tableScroll, setTableScroll] = useState(0)
+  const tableRef = useRef<HTMLDivElement>(null)
 
   const activeAgents = agents.filter(a => a.actif)
+
+  const scrollTable = (direction: 'left' | 'right') => {
+    if (tableRef.current) {
+      const scrollAmount = 300
+      if (direction === 'left') {
+        tableRef.current.scrollLeft -= scrollAmount
+      } else {
+        tableRef.current.scrollLeft += scrollAmount
+      }
+    }
+  }
+
+  const handleTableScroll = () => {
+    if (tableRef.current) {
+      setTableScroll(tableRef.current.scrollLeft)
+    }
+  }
+
+  useEffect(() => {
+    const tableElement = tableRef.current
+    if (tableElement) {
+      tableElement.addEventListener('scroll', handleTableScroll)
+      return () => {
+        tableElement.removeEventListener('scroll', handleTableScroll)
+      }
+    }
+  }, [])
 
   const filteredEcoutes = ecoutes.filter(ecoute => {
     // Filtrer uniquement les RDV Validé qualité et 2ème passage
@@ -256,8 +285,38 @@ export default function SuiviRdvPage() {
       </div>
 
       <div className="card">
-        <div className="table-container">
-          <table>
+        <div className="relative">
+          {/* Boutons de navigation */}
+          {filteredEcoutes.length > 0 && (
+            <>
+              <button
+                onClick={() => scrollTable('left')}
+                className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-lg bg-white shadow-lg border border-gray-200 transition-all ${
+                  tableScroll <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                }`}
+                disabled={tableScroll <= 0}
+              >
+                <ChevronLeft className="w-4 h-4 text-gray-600" />
+              </button>
+              <button
+                onClick={() => scrollTable('right')}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-lg bg-white shadow-lg border border-gray-200 transition-all ${
+                  tableRef.current && tableScroll >= tableRef.current.scrollWidth - tableRef.current.clientWidth - 10 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:bg-gray-50'
+                }`}
+                disabled={tableRef.current ? tableScroll >= tableRef.current.scrollWidth - tableRef.current.clientWidth - 10 : false}
+              >
+                <ChevronRight className="w-4 h-4 text-gray-600" />
+              </button>
+            </>
+          )}
+          
+          <div 
+            ref={tableRef}
+            className="table-container overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+          >
+            <table className="min-w-[800px]">
             <thead>
               <tr>
                 <th>Agent</th>
@@ -329,6 +388,7 @@ export default function SuiviRdvPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
