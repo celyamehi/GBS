@@ -5,13 +5,16 @@ import { Search, Check, X } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import { Agent, Ecoute, STATUTS_RDV } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
+import { PROJETS } from '@/data/mockData'
 
 export default function SuiviRdvPage() {
   const { agents, loading: agentsLoading, error: agentsError } = useAgents()
   const { ecoutes, loading: ecoutesLoading, error: ecoutesError, toggleHonore: toggleHonoreSupabase } = useEcoutes()
   const [filterAgent, setFilterAgent] = useState('')
+  const [filterProjet, setFilterProjet] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
-  const [filterHonore, setFilterHonore] = useState<string>('')
+  const [filterSuivi, setFilterSuivi] = useState<string>('')
+  const [filterConfirmation, setFilterConfirmation] = useState<string>('')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
 
@@ -21,15 +24,14 @@ export default function SuiviRdvPage() {
     // Filtrer uniquement les RDV Validé qualité et 2ème passage
     const isQualiteValide = ecoute.statut_rdv === 'Validé qualité' || ecoute.statut_rdv === '2ème passage'
     const matchesAgent = !filterAgent || ecoute.agent_id === filterAgent
+    const matchesProjet = !filterProjet || ecoute.projet === filterProjet
     const matchesStatut = !filterStatut || ecoute.statut_rdv === filterStatut
-    const matchesHonore = filterHonore === '' || 
-      (filterHonore === 'honore' && ecoute.rdv_honore === true) ||
-      (filterHonore === 'non_honore' && ecoute.rdv_honore === false) ||
-      (filterHonore === 'en_attente' && ecoute.rdv_honore === null)
+    const matchesSuivi = !filterSuivi || ecoute.suivi === filterSuivi
+    const matchesConfirmation = !filterConfirmation || ecoute.confirmation === filterConfirmation
     const matchesDateDebut = !dateDebut || ecoute.date_rdv >= dateDebut
     const matchesDateFin = !dateFin || ecoute.date_rdv <= dateFin
     
-    return isQualiteValide && matchesAgent && matchesStatut && matchesHonore && matchesDateDebut && matchesDateFin
+    return isQualiteValide && matchesAgent && matchesProjet && matchesStatut && matchesSuivi && matchesConfirmation && matchesDateDebut && matchesDateFin
   })
 
   const handleToggleHonore = async (ecouteId: string, honore: boolean) => {
@@ -50,9 +52,12 @@ export default function SuiviRdvPage() {
 
   const stats = {
     total: filteredEcoutes.length,
-    honores: filteredEcoutes.filter(e => e.rdv_honore === true).length,
-    nonHonores: filteredEcoutes.filter(e => e.rdv_honore === false).length,
-    enAttente: filteredEcoutes.filter(e => e.rdv_honore === null).length
+    honores: filteredEcoutes.filter(e => e.suivi === 'Honore').length,
+    nrp: filteredEcoutes.filter(e => e.suivi === 'NRP').length,
+    annules: filteredEcoutes.filter(e => e.suivi === 'Annuler').length,
+    hc: filteredEcoutes.filter(e => e.suivi === 'HC').length,
+    confirmes: filteredEcoutes.filter(e => e.confirmation === 'Confirmer').length,
+    nrpConfirmation: filteredEcoutes.filter(e => e.confirmation === 'NRP').length
   }
 
   if (agentsLoading || ecoutesLoading) {
@@ -83,7 +88,7 @@ export default function SuiviRdvPage() {
   return (
     <div className="animate-fade-in">
       <PageHeader 
-        title="Suivi RDV Honorés"
+        title="Suivi RDV"
         description="Suivez et mettez à jour le statut des RDV"
       />
 
@@ -97,12 +102,22 @@ export default function SuiviRdvPage() {
           <p className="stat-value text-[#10b981]">{stats.honores}</p>
         </div>
         <div className="stat-card" style={{ borderLeft: '4px solid #ef4444' }}>
-          <p className="stat-label">Non Honorés</p>
-          <p className="stat-value text-[#ef4444]">{stats.nonHonores}</p>
+          <p className="stat-label">NRP</p>
+          <p className="stat-value text-[#ef4444]">{stats.nrp}</p>
         </div>
         <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <p className="stat-label">En Attente</p>
-          <p className="stat-value text-[#f59e0b]">{stats.enAttente}</p>
+          <p className="stat-label">Annulés</p>
+          <p className="stat-value text-[#f59e0b]">{stats.annules}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="stat-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+          <p className="stat-label">HC</p>
+          <p className="stat-value text-[#8b5cf6]">{stats.hc}</p>
+        </div>
+        <div className="stat-card" style={{ borderLeft: '4px solid #06b6d4' }}>
+          <p className="stat-label">Confirmés</p>
+          <p className="stat-value text-[#06b6d4]">{stats.confirmes}</p>
         </div>
       </div>
 
@@ -122,6 +137,19 @@ export default function SuiviRdvPage() {
             </select>
           </div>
           <div className="w-48">
+            <label className="block text-sm font-medium text-[#6b7280] mb-2">Projet</label>
+            <select
+              value={filterProjet}
+              onChange={(e) => setFilterProjet(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Tous les projets</option>
+              {PROJETS.map(projet => (
+                <option key={projet} value={projet}>{projet}</option>
+              ))}
+            </select>
+          </div>
+          <div className="w-48">
             <label className="block text-sm font-medium text-[#6b7280] mb-2">Statut RDV</label>
             <select
               value={filterStatut}
@@ -135,16 +163,29 @@ export default function SuiviRdvPage() {
             </select>
           </div>
           <div className="w-48">
-            <label className="block text-sm font-medium text-[#6b7280] mb-2">Honoré</label>
+            <label className="block text-sm font-medium text-[#6b7280] mb-2">Suivi</label>
             <select
-              value={filterHonore}
-              onChange={(e) => setFilterHonore(e.target.value)}
+              value={filterSuivi}
+              onChange={(e) => setFilterSuivi(e.target.value)}
               className="input-field"
             >
-              <option value="">Tous</option>
-              <option value="honore">Honoré</option>
-              <option value="non_honore">Non honoré</option>
-              <option value="en_attente">En attente</option>
+              <option value="">Tous les suivis</option>
+              <option value="Honore">Honoré</option>
+              <option value="NRP">NRP</option>
+              <option value="Annuler">Annuler</option>
+              <option value="HC">HC</option>
+            </select>
+          </div>
+          <div className="w-48">
+            <label className="block text-sm font-medium text-[#6b7280] mb-2">Confirmation</label>
+            <select
+              value={filterConfirmation}
+              onChange={(e) => setFilterConfirmation(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Toutes les confirmations</option>
+              <option value="Confirmer">Confirmer</option>
+              <option value="NRP">NRP</option>
             </select>
           </div>
           <div className="w-40">
@@ -166,6 +207,23 @@ export default function SuiviRdvPage() {
             />
           </div>
         </div>
+        
+        {(filterAgent || filterProjet || filterStatut || filterSuivi || filterConfirmation || dateDebut || dateFin) && (
+          <button
+            onClick={() => {
+              setFilterAgent('')
+              setFilterProjet('')
+              setFilterStatut('')
+              setFilterSuivi('')
+              setFilterConfirmation('')
+              setDateDebut('')
+              setDateFin('')
+            }}
+            className="btn-secondary text-sm"
+          >
+            Réinitialiser les filtres
+          </button>
+        )}
       </div>
 
       <div className="card">
@@ -174,17 +232,19 @@ export default function SuiviRdvPage() {
             <thead>
               <tr>
                 <th>Agent</th>
+                <th>Projet</th>
                 <th>Date prise RDV</th>
                 <th>Date RDV</th>
                 <th>Qualité</th>
                 <th>Statut RDV</th>
-                <th className="text-center">Honoré</th>
+                <th className="text-center">Suivi</th>
+                <th className="text-center">Confirmation</th>
               </tr>
             </thead>
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={8} className="text-center py-8 text-[#6b7280]">
                     Aucun RDV trouvé
                   </td>
                 </tr>
@@ -192,6 +252,7 @@ export default function SuiviRdvPage() {
                 filteredEcoutes.map(ecoute => (
                   <tr key={ecoute.id}>
                     <td className="font-medium">{getAgentName(ecoute.agent_id)}</td>
+                    <td className="text-[#6b7280]">{ecoute.projet || '-'}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_prise_rdv)}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
                     <td>
@@ -208,6 +269,8 @@ export default function SuiviRdvPage() {
                         {ecoute.statut_rdv}
                       </span>
                     </td>
+                    <td className="text-center">{ecoute.suivi || '-'}</td>
+                    <td className="text-center">{ecoute.confirmation || '-'}</td>
                     <td>
                       <div className="flex items-center justify-center gap-2">
                         <button

@@ -26,6 +26,8 @@ export type Ecoute = {
   statut_rdv: string
   rdv_qualite: boolean
   rdv_honore: boolean | null
+  suivi: string | null
+  confirmation: string | null
   note_globale: number
   remarques: string | null
   numero_client: string | null
