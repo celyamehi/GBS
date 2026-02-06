@@ -146,8 +146,8 @@ export default function StatistiquesPage() {
   }
 
   const handleExportTablePDF = async () => {
-    const filename = `classement_agents_${currentMonth.replace('-', '_')}.pdf`
-    const title = `Classement des Agents - ${currentMonthName}`
+    const filename = `tableau_agents_${currentMonth.replace('-', '_')}.pdf`
+    const title = `Tableau des Agents - ${currentMonthName}`
     const additionalInfo = `Période: ${currentMonthName} | Total agents: ${agentStats.length}`
     const success = await exportTableToPDF('agent-table', filename, title, additionalInfo)
     if (success) {

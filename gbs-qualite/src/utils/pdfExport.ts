@@ -32,29 +32,36 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
 
     // Create canvas from element with better settings
     const canvas = await html2canvas(element, {
-      scale: 1.5,
+      scale: 1.8,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      width: element.scrollWidth,
+      width: Math.max(element.scrollWidth, 1200),
       height: element.scrollHeight,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: element.scrollWidth,
+      windowWidth: Math.max(element.scrollWidth, 1200),
       windowHeight: element.scrollHeight,
       onclone: (clonedDoc) => {
-        // Fix gradients and colors in the cloned document
+        // Fix gradients and colors in cloned document
         const clonedElement = clonedDoc.getElementById(elementId)
         if (clonedElement) {
-          // Ensure all text is visible
+          // Ensure all text is visible and properly styled
           const textElements = clonedElement.querySelectorAll('*')
           textElements.forEach(el => {
             const htmlEl = el as HTMLElement
             if (htmlEl.style) {
               htmlEl.style.color = htmlEl.style.color || 'inherit'
+              htmlEl.style.backgroundColor = htmlEl.style.backgroundColor || 'transparent'
+              htmlEl.style.opacity = htmlEl.style.opacity || '1'
             }
           })
+          
+          // Force full width for better capture
+          clonedElement.style.width = '100%'
+          clonedElement.style.maxWidth = '100%'
+          clonedElement.style.overflow = 'visible'
         }
       }
     })
@@ -159,24 +166,58 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     element.appendChild(loadingDiv)
 
     // Wait a bit for the loading message to render
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise(resolve => setTimeout(resolve, 200))
 
     // Restore original content
     element.innerHTML = originalContent
 
-    // Create canvas from element
+    // Temporarily modify styles for better PDF rendering
+    const originalStyle = element.style.cssText
+    element.style.cssText = `
+      ${originalStyle}
+      transform: scale(1);
+      transform-origin: top left;
+      width: 100%;
+      max-width: 100%;
+      overflow: visible;
+      position: relative;
+    `
+
+    // Create canvas from element with better settings
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 1.8,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
+      width: element.scrollWidth,
+      height: element.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
       windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight
+      windowHeight: element.scrollHeight,
+      onclone: (clonedDoc) => {
+        // Fix styles in cloned document
+        const clonedElement = clonedDoc.getElementById(tableId)
+        if (clonedElement) {
+          // Ensure all text is visible and properly styled
+          const textElements = clonedElement.querySelectorAll('*')
+          textElements.forEach(el => {
+            const htmlEl = el as HTMLElement
+            if (htmlEl.style) {
+              htmlEl.style.color = htmlEl.style.color || 'inherit'
+              htmlEl.style.backgroundColor = htmlEl.style.backgroundColor || 'transparent'
+            }
+          })
+        }
+      }
     })
 
+    // Restore original styles
+    element.style.cssText = originalStyle
+
     // Get image data
-    const imgData = canvas.toDataURL('image/png')
+    const imgData = canvas.toDataURL('image/png', 0.95)
     
     // Calculate dimensions
     const imgWidth = canvas.width
@@ -190,7 +231,7 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     
     // Calculate image dimensions to fit page
     const availableWidth = pdfWidth - 2 * margin
-    const availableHeight = pdfHeight - 40 // Leave space for header
+    const availableHeight = pdfHeight - 50 // Leave space for header
     const ratio = Math.min(availableWidth / imgWidth, availableHeight / imgHeight)
     const finalWidth = imgWidth * ratio
     const finalHeight = imgHeight * ratio
@@ -219,8 +260,48 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       pdf.text(additionalInfo, pdfWidth / 2, 27, { align: 'center' })
     }
     
-    // Add image
-    pdf.addImage(imgData, 'PNG', margin, 30, finalWidth, finalHeight)
+    // Calculate how many pages we need
+    const totalPages = Math.ceil(finalHeight / availableHeight)
+    
+    for (let i = 0; i < totalPages; i++) {
+      if (i > 0) {
+        pdf.addPage()
+        // Add header to each page
+        pdf.setFontSize(16)
+        pdf.setTextColor(40, 40, 40)
+        pdf.text(title, pdfWidth / 2, 15, { align: 'center' })
+        
+        pdf.setFontSize(10)
+        pdf.setTextColor(100, 100, 100)
+        pdf.text(`Généré le: ${date}`, pdfWidth / 2, 22, { align: 'center' })
+        
+        if (additionalInfo) {
+          pdf.setFontSize(9)
+          pdf.setTextColor(80, 80, 80)
+          pdf.text(additionalInfo, pdfWidth / 2, 27, { align: 'center' })
+        }
+      }
+      
+      const startY = i * availableHeight
+      const remainingHeight = finalHeight - startY
+      const pageHeight = Math.min(remainingHeight, availableHeight)
+      
+      // Calculate source rectangle for this page
+      const sourceY = (startY / ratio)
+      const sourceHeight = (pageHeight / ratio)
+      
+      // Create a temporary canvas for this page
+      const pageCanvas = document.createElement('canvas')
+      pageCanvas.width = imgWidth
+      pageCanvas.height = sourceHeight
+      const pageCtx = pageCanvas.getContext('2d')
+      
+      if (pageCtx) {
+        pageCtx.drawImage(canvas, 0, sourceY, imgWidth, sourceHeight, 0, 0, imgWidth, sourceHeight)
+        const pageImgData = pageCanvas.toDataURL('image/png', 0.95)
+        pdf.addImage(pageImgData, 'PNG', margin, 35, finalWidth, pageHeight)
+      }
+    }
     
     // Save the PDF
     pdf.save(filename)
