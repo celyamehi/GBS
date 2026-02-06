@@ -451,11 +451,15 @@ export default function EcoutesPage() {
                       <select
                         value={ecoute.statut_rdv}
                         onChange={(e) => handleUpdateStatutRdv(ecoute.id, e.target.value)}
-                        className="w-full min-w-[120px] text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`w-full min-w-[120px] text-sm border rounded-md px-2 py-1 font-medium focus:outline-none focus:ring-2 ${
+                          ecoute.statut_rdv === 'Validé qualité' ? 'bg-green-50 border-green-300 text-green-800 focus:ring-green-500' :
+                          ecoute.statut_rdv === 'Annulé' ? 'bg-red-50 border-red-300 text-red-800 focus:ring-red-500' :
+                          'bg-yellow-50 border-yellow-300 text-yellow-800 focus:ring-yellow-500'
+                        }`}
                       >
-                        <option value="2ème passage">2ème passage</option>
-                        <option value="Validé qualité">RDV QUALITE</option>
-                        <option value="Annulé">Annulé</option>
+                        <option value="2ème passage" className="bg-white text-gray-700">2ème passage</option>
+                        <option value="Validé qualité" className="bg-white text-gray-700">RDV QUALITE</option>
+                        <option value="Annulé" className="bg-white text-gray-700">Annulé</option>
                       </select>
                     </td>
                     <td>

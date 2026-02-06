@@ -293,21 +293,25 @@ export default function SuiviRdvPage() {
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
                     <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
                     <td>
-                      <select
-                        value={ecoute.statut_rdv}
-                        onChange={(e) => handleUpdateStatutRdv(ecoute.id, e.target.value)}
-                        className="w-full min-w-[120px] text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="2ème passage">2ème passage</option>
-                        <option value="Validé qualité">RDV QUALITE</option>
-                        <option value="Annulé">Annulé</option>
-                      </select>
+                      <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                        ecoute.statut_rdv === 'Validé qualité' ? 'bg-green-100 text-green-800 border border-green-200' :
+                        ecoute.statut_rdv === 'Annulé' ? 'bg-red-100 text-red-800 border border-red-200' :
+                        'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      }`}>
+                        {ecoute.statut_rdv === 'Validé qualité' ? 'RDV QUALITE' : ecoute.statut_rdv}
+                      </div>
                     </td>
                     <td className="text-center py-2">
                       <select
                         value={ecoute.suivi || ''}
                         onChange={(e) => handleUpdateSuivi(ecoute.id, e.target.value || null)}
-                        className="w-full min-w-[100px] text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`w-full min-w-[100px] text-sm border rounded-md px-2 py-1 font-medium focus:outline-none focus:ring-2 ${
+                          ecoute.suivi === 'Honore' ? 'bg-green-50 border-green-300 text-green-800 focus:ring-green-500' :
+                          ecoute.suivi === 'NRP' ? 'bg-red-50 border-red-300 text-red-800 focus:ring-red-500' :
+                          ecoute.suivi === 'Annuler' ? 'bg-orange-50 border-orange-300 text-orange-800 focus:ring-orange-500' :
+                          ecoute.suivi === 'HC' ? 'bg-purple-50 border-purple-300 text-purple-800 focus:ring-purple-500' :
+                          'bg-white border-gray-300 text-gray-700 focus:ring-blue-500'
+                        }`}
                       >
                         <option value="">-</option>
                         <option value="Honore">Honoré</option>
@@ -320,7 +324,11 @@ export default function SuiviRdvPage() {
                       <select
                         value={ecoute.confirmation || ''}
                         onChange={(e) => handleUpdateConfirmation(ecoute.id, e.target.value || null)}
-                        className="w-full min-w-[100px] text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`w-full min-w-[100px] text-sm border rounded-md px-2 py-1 font-medium focus:outline-none focus:ring-2 ${
+                          ecoute.confirmation === 'Confirmer' ? 'bg-green-50 border-green-300 text-green-800 focus:ring-green-500' :
+                          ecoute.confirmation === 'NRP' ? 'bg-red-50 border-red-300 text-red-800 focus:ring-red-500' :
+                          'bg-white border-gray-300 text-gray-700 focus:ring-blue-500'
+                        }`}
                       >
                         <option value="">-</option>
                         <option value="Confirmer">Confirmer</option>
