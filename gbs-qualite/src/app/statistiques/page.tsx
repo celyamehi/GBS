@@ -6,7 +6,7 @@ import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { Agent, Ecoute } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
-import { exportToPDF, exportTableToPDF } from '../../utils/pdfExport'
+import { exportToPDF, exportTableToPDF } from '@/utils/pdfExport'
 import { PROJETS } from '@/data/mockData'
 
 export default function StatistiquesPage() {
@@ -30,7 +30,7 @@ export default function StatistiquesPage() {
       const matchesAgent = !selectedAgent || ecoute.agent_id === selectedAgent
       return matchesDateDebut && matchesDateFin && matchesProjet && matchesAgent
     })
-  }, [ecoutes, dateDebut, dateFin])
+  }, [ecoutes, dateDebut, dateFin, selectedProjet, selectedAgent])
 
   const currentMonthEcoutes = useMemo(() => {
     return ecoutes.filter(ecoute => 
