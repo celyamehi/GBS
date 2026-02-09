@@ -28,8 +28,23 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
       width: 100%;
       max-width: 100%;
       overflow: visible;
+      position: relative;
     `
 
+    // Ensure the element is fully visible and scrollable
+    const originalOverflow = element.style.overflow
+    const originalHeight = element.style.height
+    element.style.overflow = 'visible'
+    element.style.height = 'auto'
+    
+    // Force a reflow to ensure all content is rendered
+    element.offsetHeight
+    
+    // Get the actual dimensions including all content
+    const rect = element.getBoundingClientRect()
+    const scrollWidth = Math.max(element.scrollWidth, rect.width, 1200)
+    const scrollHeight = Math.max(element.scrollHeight, rect.height)
+    
     // Create canvas from element with better settings
     const canvas = await html2canvas(element, {
       scale: 1.8,
@@ -37,12 +52,14 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      width: Math.max(element.scrollWidth, 1200),
-      height: element.scrollHeight,
+      width: scrollWidth,
+      height: scrollHeight,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: Math.max(element.scrollWidth, 1200),
-      windowHeight: element.scrollHeight,
+      windowWidth: scrollWidth,
+      windowHeight: scrollHeight,
+      x: 0,
+      y: 0,
       onclone: (clonedDoc) => {
         // Fix gradients and colors in cloned document
         const clonedElement = clonedDoc.getElementById(elementId)
@@ -68,6 +85,8 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
 
     // Restore original styles
     element.style.cssText = originalStyle
+    element.style.overflow = originalOverflow
+    element.style.height = originalHeight
 
     // Get image data
     const imgData = canvas.toDataURL('image/png', 0.95)
@@ -116,6 +135,10 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
         pdf.setFontSize(16)
         pdf.setTextColor(40, 40, 40)
         pdf.text(title, pdfWidth / 2, 15, { align: 'center' })
+        
+        pdf.setFontSize(10)
+        pdf.setTextColor(100, 100, 100)
+        pdf.text(`Généré le: ${date}`, pdfWidth / 2, 22, { align: 'center' })
       }
       
       const startY = i * availableHeight
@@ -171,6 +194,20 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     // Restore original content
     element.innerHTML = originalContent
 
+    // Ensure the table container is fully visible and scrollable
+    const originalOverflow = element.style.overflow
+    const originalHeight = element.style.height
+    element.style.overflow = 'visible'
+    element.style.height = 'auto'
+    
+    // Force a reflow to ensure all content is rendered
+    element.offsetHeight
+    
+    // Get the actual dimensions including all content
+    const rect = element.getBoundingClientRect()
+    const scrollWidth = Math.max(element.scrollWidth, rect.width, 1200)
+    const scrollHeight = Math.max(element.scrollHeight, rect.height)
+    
     // Temporarily modify styles for better PDF rendering
     const originalStyle = element.style.cssText
     element.style.cssText = `
@@ -190,12 +227,14 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      width: element.scrollWidth,
-      height: element.scrollHeight,
+      width: scrollWidth,
+      height: scrollHeight,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
+      windowWidth: scrollWidth,
+      windowHeight: scrollHeight,
+      x: 0,
+      y: 0,
       onclone: (clonedDoc) => {
         // Fix styles in cloned document
         const clonedElement = clonedDoc.getElementById(tableId)
@@ -207,7 +246,30 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
             if (htmlEl.style) {
               htmlEl.style.color = htmlEl.style.color || 'inherit'
               htmlEl.style.backgroundColor = htmlEl.style.backgroundColor || 'transparent'
+              htmlEl.style.opacity = htmlEl.style.opacity || '1'
             }
+          })
+          
+          // Force full width for better capture
+          clonedElement.style.width = '100%'
+          clonedElement.style.maxWidth = '100%'
+          clonedElement.style.overflow = 'visible'
+          
+          // Ensure table rows are visible
+          const tableRows = clonedElement.querySelectorAll('tr, tbody, thead')
+          tableRows.forEach(row => {
+            const htmlRow = row as HTMLElement
+            htmlRow.style.display = 'table-row'
+            htmlRow.style.visibility = 'visible'
+          })
+          
+          // Ensure table cells are visible
+          const tableCells = clonedElement.querySelectorAll('td, th')
+          tableCells.forEach(cell => {
+            const htmlCell = cell as HTMLElement
+            htmlCell.style.display = 'table-cell'
+            htmlCell.style.visibility = 'visible'
+            htmlCell.style.whiteSpace = 'nowrap'
           })
         }
       }
@@ -215,6 +277,8 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
 
     // Restore original styles
     element.style.cssText = originalStyle
+    element.style.overflow = originalOverflow
+    element.style.height = originalHeight
 
     // Get image data
     const imgData = canvas.toDataURL('image/png', 0.95)
