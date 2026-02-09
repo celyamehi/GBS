@@ -103,30 +103,22 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
     // Wait a bit for styles to apply
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Capture element with high-quality settings
+    // Capture the element with Chrome-compatible settings
     const canvas = await html2canvas(element, {
-      scale: 4, // Higher scale for better quality
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
       removeContainer: false,
-      foreignObjectRendering: false, // Disable for better Chrome compatibility
-      imageTimeout: 20000, // Increased timeout for high quality
-      width: element.scrollWidth * 4, // Higher resolution
-      height: element.scrollHeight * 4, // Higher resolution
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
+      foreignObjectRendering: false,
+      imageTimeout: 15000,
       onclone: (clonedDoc) => {
-        // Ensure styles are applied in cloned document
         const clonedElement = clonedDoc.getElementById(elementId)
         if (clonedElement) {
           clonedElement.style.width = '100%'
           clonedElement.style.height = 'auto'
           clonedElement.style.overflow = 'visible'
-          clonedElement.style.transform = 'scale(1)' // Ensure no scaling
         }
       }
     })
@@ -147,8 +139,8 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
       wrapper.parentNode?.removeChild(wrapper)
     }
 
-    // Get image data with higher quality
-    const imgData = canvas.toDataURL('image/png', 1.0) // Maximum quality
+    // Get image data
+    const imgData = canvas.toDataURL('image/png', 0.95)
     
     // Calculate PDF dimensions
     const imgWidth = canvas.width
@@ -199,7 +191,7 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
           0, 0, sliceWidth, sliceHeight
         )
         
-        const sliceData = tempCanvas.toDataURL('image/png', 1.0)
+        const sliceData = tempCanvas.toDataURL('image/png', 0.95)
         pdf.addImage(sliceData, 'PNG', 10, headerHeight, pageWidth - 20, (pageHeight - headerHeight))
       }
       
@@ -255,7 +247,7 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     loadingDiv.innerHTML = 'Génération du PDF en cours...'
     document.body.appendChild(loadingDiv)
 
-    // Create a wrapper to control element during capture
+    // Create a wrapper with landscape orientation support
     const wrapper = document.createElement('div')
     wrapper.style.cssText = `
       position: absolute;
@@ -266,11 +258,12 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       z-index: 9999;
       padding: 20px;
       box-sizing: border-box;
+      overflow-x: auto;
     `
     element.parentNode?.insertBefore(wrapper, element)
     wrapper.appendChild(element)
 
-    // Force the element to be fully visible
+    // Force the element to be fully visible with natural width
     const originalPosition = element.style.position
     const originalTop = element.style.top
     const originalLeft = element.style.left
@@ -284,8 +277,9 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       position: relative !important;
       top: 0 !important;
       left: 0 !important;
-      width: 100% !important;
-      max-width: 100% !important;
+      width: max-content !important;
+      max-width: none !important;
+      min-width: max-content !important;
       height: auto !important;
       overflow: visible !important;
       transform: none !important;
@@ -293,69 +287,93 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       background: white !important;
     `
 
-    // Force all table elements to be visible
+    // Force all table elements to be visible with optimal styling
     const allElements = element.querySelectorAll('*')
     allElements.forEach(el => {
       const htmlEl = el as HTMLElement
       htmlEl.style.visibility = 'visible !important'
       htmlEl.style.opacity = '1 !important'
-      htmlEl.style.display = 'block !important'
       
       // Special handling for tables
       if (htmlEl.tagName === 'TABLE') {
         htmlEl.style.display = 'table !important'
-        htmlEl.style.width = '100% !important'
-        htmlEl.style.tableLayout = 'fixed !important'
+        htmlEl.style.width = 'max-content !important'
+        htmlEl.style.minWidth = 'max-content !important'
+        htmlEl.style.maxWidth = 'none !important'
+        htmlEl.style.tableLayout = 'auto !important'
         htmlEl.style.borderCollapse = 'collapse !important'
         htmlEl.style.backgroundColor = 'white !important'
+        htmlEl.style.fontSize = '10px !important'
+        htmlEl.style.fontFamily = 'Arial, sans-serif !important'
       }
       
-      // Special handling for table rows and cells
+      // Special handling for table rows
       if (htmlEl.tagName === 'TR') {
         htmlEl.style.display = 'table-row !important'
         htmlEl.style.visibility = 'visible !important'
         htmlEl.style.backgroundColor = 'white !important'
+        htmlEl.style.height = 'auto !important'
       }
       
+      // Special handling for table cells
       if (htmlEl.tagName === 'TD' || htmlEl.tagName === 'TH') {
         htmlEl.style.display = 'table-cell !important'
         htmlEl.style.visibility = 'visible !important'
         htmlEl.style.whiteSpace = 'nowrap !important'
-        htmlEl.style.padding = '8px !important'
+        htmlEl.style.padding = '4px 6px !important'
         htmlEl.style.border = '1px solid #ddd !important'
         htmlEl.style.textAlign = 'left !important'
         htmlEl.style.backgroundColor = 'white !important'
         htmlEl.style.color = 'black !important'
+        htmlEl.style.fontSize = '9px !important'
+        htmlEl.style.fontFamily = 'Arial, sans-serif !important'
+        htmlEl.style.verticalAlign = 'top !important'
       }
     })
 
     // Wait a bit for styles to apply
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Capture element with high-quality settings
+    // Get the actual dimensions after styling
+    const actualWidth = element.scrollWidth
+    const actualHeight = element.scrollHeight
+
+    // Create PDF in landscape mode for better table fit
+    const pdf = new jsPDF({
+      orientation: actualWidth > 1000 ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    })
+
+    // Capture the element with high quality
     const canvas = await html2canvas(element, {
-      scale: 4, // Higher scale for better quality
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
       removeContainer: false,
-      foreignObjectRendering: false, // Disable for better Chrome compatibility
-      imageTimeout: 20000, // Increased timeout for high quality
-      width: element.scrollWidth * 4, // Higher resolution
-      height: element.scrollHeight * 4, // Higher resolution
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
+      foreignObjectRendering: false,
+      imageTimeout: 20000,
+      width: actualWidth,
+      height: actualHeight,
+      windowWidth: actualWidth,
+      windowHeight: actualHeight,
       onclone: (clonedDoc) => {
-        // Ensure styles are applied in cloned document
         const clonedElement = clonedDoc.getElementById(tableId)
         if (clonedElement) {
-          clonedElement.style.width = '100%'
-          clonedElement.style.height = 'auto'
-          clonedElement.style.overflow = 'visible'
-          clonedElement.style.transform = 'scale(1)' // Ensure no scaling
+          clonedElement.style.width = 'max-content'
+          clonedElement.style.minWidth = 'max-content'
+          clonedElement.style.maxWidth = 'none'
+          
+          const table = clonedElement.querySelector('table')
+          if (table) {
+            const htmlTable = table as HTMLElement
+            htmlTable.style.width = 'max-content'
+            htmlTable.style.minWidth = 'max-content'
+            htmlTable.style.maxWidth = 'none'
+            htmlTable.style.tableLayout = 'auto'
+          }
         }
       }
     })
@@ -376,70 +394,83 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       wrapper.parentNode?.removeChild(wrapper)
     }
 
-    // Get image data with higher quality
-    const imgData = canvas.toDataURL('image/png', 1.0) // Maximum quality
-    
     // Calculate PDF dimensions
     const imgWidth = canvas.width
     const imgHeight = canvas.height
-    const pageHeight = 297 // A4 height in mm
-    const pageWidth = 210 // A4 width in mm
-    const ratio = imgWidth / pageWidth
-    const pdfHeight = imgHeight / ratio
+    
+    // Get PDF page dimensions
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+    
+    // Calculate ratio to fit image in page
+    const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight) * 0.9 // 90% of page size
+    const scaledWidth = imgWidth * ratio
+    const scaledHeight = imgHeight * ratio
 
-    // Create PDF
-    const pdf = new jsPDF('p', 'mm', 'a4')
+    // Add header
+    pdf.setFontSize(16)
+    pdf.setTextColor(0, 0, 0)
+    pdf.text(title, pageWidth / 2, 15, { align: 'center' })
     
-    let yPosition = 0
-    const headerHeight = additionalInfo ? 35 : 30
-    
-    while (yPosition < pdfHeight) {
-      if (yPosition > 0) {
-        pdf.addPage()
-      }
-      
-      // Add header
-      pdf.setFontSize(16)
-      pdf.setTextColor(0, 0, 0)
-      pdf.text(title, pageWidth / 2, 15, { align: 'center' })
-      
-      // Add additional info if provided
-      if (additionalInfo) {
-        pdf.setFontSize(10)
-        pdf.setTextColor(100, 100, 100)
-        pdf.text(additionalInfo, pageWidth / 2, 25, { align: 'center' })
-      }
-      
-      // Add date
+    if (additionalInfo) {
       pdf.setFontSize(10)
       pdf.setTextColor(100, 100, 100)
-      const date = new Date().toLocaleDateString('fr-FR')
-      pdf.text(`Généré le: ${date}`, pageWidth / 2, additionalInfo ? 32 : 25, { align: 'center' })
+      pdf.text(additionalInfo, pageWidth / 2, 25, { align: 'center' })
+    }
+    
+    pdf.setFontSize(10)
+    pdf.setTextColor(100, 100, 100)
+    const date = new Date().toLocaleDateString('fr-FR')
+    const dateY = additionalInfo ? 32 : 25
+    pdf.text(`Généré le: ${date}`, pageWidth / 2, dateY, { align: 'center' })
+
+    // Add table image
+    const imgData = canvas.toDataURL('image/png', 1.0)
+    const imageY = additionalInfo ? 40 : 33
+    
+    // Check if image fits on one page
+    if (scaledHeight + imageY <= pageHeight - 10) {
+      // Fits on one page
+      pdf.addImage(imgData, 'PNG', (pageWidth - scaledWidth) / 2, imageY, scaledWidth, scaledHeight)
+    } else {
+      // Needs multiple pages
+      const availableHeight = pageHeight - imageY - 10
+      const ratioPerPage = availableHeight / imgHeight
+      const heightPerPage = imgHeight * ratioPerPage
       
-      // Calculate slice dimensions
-      const sliceHeight = Math.min((pageHeight - headerHeight) * ratio, imgHeight - yPosition)
-      const sliceY = yPosition
-      const sliceWidth = imgWidth
-      const sliceX = 0
+      let yPosition = 0
+      let pageNumber = 1
       
-      // Create a temporary canvas for this slice
-      const tempCanvas = document.createElement('canvas')
-      tempCanvas.width = sliceWidth
-      tempCanvas.height = sliceHeight
-      const tempCtx = tempCanvas.getContext('2d')
-      
-      if (tempCtx) {
-        tempCtx.drawImage(
-          canvas,
-          sliceX, sliceY, sliceWidth, sliceHeight,
-          0, 0, sliceWidth, sliceHeight
-        )
+      while (yPosition < imgHeight) {
+        if (pageNumber > 1) {
+          pdf.addPage()
+          pdf.setFontSize(12)
+          pdf.text(`${title} - Page ${pageNumber}`, pageWidth / 2, 15, { align: 'center' })
+        }
         
-        const sliceData = tempCanvas.toDataURL('image/png', 1.0)
-        pdf.addImage(sliceData, 'PNG', 10, headerHeight, pageWidth - 20, (pageHeight - headerHeight))
+        const sliceHeight = Math.min(heightPerPage, imgHeight - yPosition)
+        
+        // Create a temporary canvas for this slice
+        const tempCanvas = document.createElement('canvas')
+        tempCanvas.width = imgWidth
+        tempCanvas.height = sliceHeight
+        const tempCtx = tempCanvas.getContext('2d')
+        
+        if (tempCtx) {
+          tempCtx.drawImage(
+            canvas,
+            0, yPosition, imgWidth, sliceHeight,
+            0, 0, imgWidth, sliceHeight
+          )
+          
+          const sliceData = tempCanvas.toDataURL('image/png', 1.0)
+          const sliceScaledHeight = sliceHeight * ratio
+          pdf.addImage(sliceData, 'PNG', (pageWidth - scaledWidth) / 2, pageNumber === 1 ? imageY : 25, scaledWidth, sliceScaledHeight)
+        }
+        
+        yPosition += heightPerPage
+        pageNumber++
       }
-      
-      yPosition += sliceHeight
     }
 
     // Save PDF
