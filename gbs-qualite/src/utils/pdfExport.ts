@@ -19,35 +19,54 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
     // Restore original content
     element.innerHTML = originalContent
 
-    // Temporarily modify styles for better PDF rendering
-    const originalStyle = element.style.cssText
-    element.style.cssText = `
-      ${originalStyle}
-      transform: scale(1);
-      transform-origin: top left;
+    // Create a wrapper div to ensure proper capture
+    const wrapper = document.createElement('div')
+    wrapper.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      max-width: 100%;
-      overflow: visible;
-      position: relative;
+      background: white;
+      z-index: 9999;
+    `
+    element.parentNode?.insertBefore(wrapper, element)
+    wrapper.appendChild(element)
+
+    // Force the element to be fully visible
+    const originalPosition = element.style.position
+    const originalTop = element.style.top
+    const originalLeft = element.style.left
+    const originalWidth = element.style.width
+    const originalHeight = element.style.height
+    const originalOverflow = element.style.overflow
+    const originalTransform = element.style.transform
+    const originalOpacity = element.style.opacity
+
+    element.style.cssText = `
+      position: relative !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      transform: none !important;
+      opacity: 1 !important;
+      background: white !important;
+      z-index: 1 !important;
     `
 
-    // Ensure the element is fully visible and scrollable
-    const originalOverflow = element.style.overflow
-    const originalHeight = element.style.height
-    element.style.overflow = 'visible'
-    element.style.height = 'auto'
-    
-    // Force a reflow to ensure all content is rendered
+    // Force a reflow
     element.offsetHeight
-    
-    // Get the actual dimensions including all content
+
+    // Get the actual dimensions
     const rect = element.getBoundingClientRect()
     const scrollWidth = Math.max(element.scrollWidth, rect.width, 1200)
     const scrollHeight = Math.max(element.scrollHeight, rect.height)
-    
-    // Create canvas from element with better settings
+
+    // Create canvas with enhanced settings
     const canvas = await html2canvas(element, {
-      scale: 1.8,
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
@@ -60,33 +79,79 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
       windowHeight: scrollHeight,
       x: 0,
       y: 0,
+      foreignObjectRendering: true,
+      imageTimeout: 0,
+      removeContainer: false,
       onclone: (clonedDoc) => {
-        // Fix gradients and colors in cloned document
         const clonedElement = clonedDoc.getElementById(elementId)
         if (clonedElement) {
-          // Ensure all text is visible and properly styled
-          const textElements = clonedElement.querySelectorAll('*')
-          textElements.forEach(el => {
+          // Force all elements to be visible
+          const allElements = clonedElement.querySelectorAll('*')
+          allElements.forEach(el => {
             const htmlEl = el as HTMLElement
             if (htmlEl.style) {
+              htmlEl.style.display = htmlEl.style.display || ''
+              htmlEl.style.visibility = htmlEl.style.visibility || 'visible'
+              htmlEl.style.opacity = htmlEl.style.opacity || '1'
               htmlEl.style.color = htmlEl.style.color || 'inherit'
               htmlEl.style.backgroundColor = htmlEl.style.backgroundColor || 'transparent'
-              htmlEl.style.opacity = htmlEl.style.opacity || '1'
             }
           })
-          
-          // Force full width for better capture
-          clonedElement.style.width = '100%'
-          clonedElement.style.maxWidth = '100%'
-          clonedElement.style.overflow = 'visible'
+
+          // Specific table fixes
+          clonedElement.style.width = '100% !important'
+          clonedElement.style.maxWidth = '100% !important'
+          clonedElement.style.overflow = 'visible !important'
+          clonedElement.style.display = 'block !important'
+          clonedElement.style.visibility = 'visible !important'
+
+          // Fix table elements
+          const tables = clonedElement.querySelectorAll('table')
+          tables.forEach(table => {
+            const htmlTable = table as HTMLElement
+            htmlTable.style.width = '100% !important'
+            htmlTable.style.maxWidth = '100% !important'
+            htmlTable.style.tableLayout = 'fixed'
+            htmlTable.style.borderCollapse = 'collapse'
+          })
+
+          // Fix table cells
+          const cells = clonedElement.querySelectorAll('td, th')
+          cells.forEach(cell => {
+            const htmlCell = cell as HTMLElement
+            htmlCell.style.display = 'table-cell !important'
+            htmlCell.style.visibility = 'visible !important'
+            htmlCell.style.whiteSpace = 'nowrap'
+            htmlCell.style.padding = '8px'
+            htmlCell.style.border = '1px solid #e5e7eb'
+          })
+
+          // Fix table rows
+          const rows = clonedElement.querySelectorAll('tr')
+          rows.forEach(row => {
+            const htmlRow = row as HTMLElement
+            htmlRow.style.display = 'table-row !important'
+            htmlRow.style.visibility = 'visible !important'
+          })
         }
       }
     })
 
     // Restore original styles
-    element.style.cssText = originalStyle
-    element.style.overflow = originalOverflow
+    element.style.position = originalPosition
+    element.style.top = originalTop
+    element.style.left = originalLeft
+    element.style.width = originalWidth
     element.style.height = originalHeight
+    element.style.overflow = originalOverflow
+    element.style.transform = originalTransform
+    element.style.opacity = originalOpacity
+
+    // Remove wrapper
+    if (wrapper.parentNode) {
+      wrapper.parentNode?.insertBefore(element, wrapper)
+      wrapper.parentNode?.removeChild(wrapper)
+    }
 
     // Get image data
     const imgData = canvas.toDataURL('image/png', 0.95)
@@ -103,7 +168,7 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
     
     // Calculate image dimensions to fit page
     const availableWidth = pdfWidth - 2 * margin
-    const availableHeight = pdfHeight - 40 // Leave space for header
+    const availableHeight = pdfHeight - 40
     const ratio = Math.min(availableWidth / imgWidth, availableHeight / imgHeight)
     const finalWidth = imgWidth * ratio
     const finalHeight = imgHeight * ratio
@@ -183,7 +248,7 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     // Show loading state
     const originalContent = element.innerHTML
     const loadingDiv = document.createElement('div')
-    loadingDiv.style.cssText = 'padding: 40px; text-align: center; color: #6b7280; font-size: 16px;'
+    loadingDiv.style.cssText = 'padding: 40px; text-align: center; color: #6b7280; font-size: 16px; background: white;'
     loadingDiv.innerHTML = 'Génération du PDF en cours...'
     element.innerHTML = ''
     element.appendChild(loadingDiv)
@@ -194,35 +259,58 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     // Restore original content
     element.innerHTML = originalContent
 
-    // Ensure the table container is fully visible and scrollable
-    const originalOverflow = element.style.overflow
+    // Create a wrapper div to ensure proper capture
+    const wrapper = document.createElement('div')
+    wrapper.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: white;
+      z-index: 9999;
+      padding: 20px;
+      box-sizing: border-box;
+    `
+    element.parentNode?.insertBefore(wrapper, element)
+    wrapper.appendChild(element)
+
+    // Force the element to be fully visible
+    const originalPosition = element.style.position
+    const originalTop = element.style.top
+    const originalLeft = element.style.left
+    const originalWidth = element.style.width
     const originalHeight = element.style.height
-    element.style.overflow = 'visible'
-    element.style.height = 'auto'
-    
-    // Force a reflow to ensure all content is rendered
+    const originalOverflow = element.style.overflow
+    const originalTransform = element.style.transform
+    const originalOpacity = element.style.opacity
+
+    element.style.cssText = `
+      position: relative !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      transform: none !important;
+      opacity: 1 !important;
+      background: white !important;
+      z-index: 1 !important;
+      display: block !important;
+      visibility: visible !important;
+    `
+
+    // Force a reflow
     element.offsetHeight
-    
-    // Get the actual dimensions including all content
+
+    // Get the actual dimensions
     const rect = element.getBoundingClientRect()
     const scrollWidth = Math.max(element.scrollWidth, rect.width, 1200)
     const scrollHeight = Math.max(element.scrollHeight, rect.height)
-    
-    // Temporarily modify styles for better PDF rendering
-    const originalStyle = element.style.cssText
-    element.style.cssText = `
-      ${originalStyle}
-      transform: scale(1);
-      transform-origin: top left;
-      width: 100%;
-      max-width: 100%;
-      overflow: visible;
-      position: relative;
-    `
 
-    // Create canvas from element with better settings
+    // Create canvas with enhanced settings
     const canvas = await html2canvas(element, {
-      scale: 1.8,
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
@@ -235,50 +323,80 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       windowHeight: scrollHeight,
       x: 0,
       y: 0,
+      foreignObjectRendering: true,
+      imageTimeout: 0,
+      removeContainer: false,
       onclone: (clonedDoc) => {
-        // Fix styles in cloned document
         const clonedElement = clonedDoc.getElementById(tableId)
         if (clonedElement) {
-          // Ensure all text is visible and properly styled
-          const textElements = clonedElement.querySelectorAll('*')
-          textElements.forEach(el => {
+          // Force all elements to be visible
+          const allElements = clonedElement.querySelectorAll('*')
+          allElements.forEach(el => {
             const htmlEl = el as HTMLElement
             if (htmlEl.style) {
+              htmlEl.style.display = htmlEl.style.display || ''
+              htmlEl.style.visibility = htmlEl.style.visibility || 'visible'
+              htmlEl.style.opacity = htmlEl.style.opacity || '1'
               htmlEl.style.color = htmlEl.style.color || 'inherit'
               htmlEl.style.backgroundColor = htmlEl.style.backgroundColor || 'transparent'
-              htmlEl.style.opacity = htmlEl.style.opacity || '1'
             }
           })
-          
-          // Force full width for better capture
-          clonedElement.style.width = '100%'
-          clonedElement.style.maxWidth = '100%'
-          clonedElement.style.overflow = 'visible'
-          
-          // Ensure table rows are visible
-          const tableRows = clonedElement.querySelectorAll('tr, tbody, thead')
-          tableRows.forEach(row => {
-            const htmlRow = row as HTMLElement
-            htmlRow.style.display = 'table-row'
-            htmlRow.style.visibility = 'visible'
+
+          // Specific table fixes
+          clonedElement.style.width = '100% !important'
+          clonedElement.style.maxWidth = '100% !important'
+          clonedElement.style.overflow = 'visible !important'
+          clonedElement.style.display = 'block !important'
+          clonedElement.style.visibility = 'visible !important'
+
+          // Fix table elements
+          const tables = clonedElement.querySelectorAll('table')
+          tables.forEach(table => {
+            const htmlTable = table as HTMLElement
+            htmlTable.style.width = '100% !important'
+            htmlTable.style.maxWidth = '100% !important'
+            htmlTable.style.tableLayout = 'fixed'
+            htmlTable.style.borderCollapse = 'collapse'
           })
-          
-          // Ensure table cells are visible
-          const tableCells = clonedElement.querySelectorAll('td, th')
-          tableCells.forEach(cell => {
+
+          // Fix table cells
+          const cells = clonedElement.querySelectorAll('td, th')
+          cells.forEach(cell => {
             const htmlCell = cell as HTMLElement
-            htmlCell.style.display = 'table-cell'
-            htmlCell.style.visibility = 'visible'
+            htmlCell.style.display = 'table-cell !important'
+            htmlCell.style.visibility = 'visible !important'
             htmlCell.style.whiteSpace = 'nowrap'
+            htmlCell.style.padding = '8px'
+            htmlCell.style.border = '1px solid #e5e7eb'
+            htmlCell.style.textAlign = htmlCell.style.textAlign || 'left'
+          })
+
+          // Fix table rows
+          const rows = clonedElement.querySelectorAll('tr')
+          rows.forEach(row => {
+            const htmlRow = row as HTMLElement
+            htmlRow.style.display = 'table-row !important'
+            htmlRow.style.visibility = 'visible !important'
           })
         }
       }
     })
 
     // Restore original styles
-    element.style.cssText = originalStyle
-    element.style.overflow = originalOverflow
+    element.style.position = originalPosition
+    element.style.top = originalTop
+    element.style.left = originalLeft
+    element.style.width = originalWidth
     element.style.height = originalHeight
+    element.style.overflow = originalOverflow
+    element.style.transform = originalTransform
+    element.style.opacity = originalOpacity
+
+    // Remove wrapper
+    if (wrapper.parentNode) {
+      wrapper.parentNode?.insertBefore(element, wrapper)
+      wrapper.parentNode?.removeChild(wrapper)
+    }
 
     // Get image data
     const imgData = canvas.toDataURL('image/png', 0.95)
@@ -295,7 +413,7 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     
     // Calculate image dimensions to fit page
     const availableWidth = pdfWidth - 2 * margin
-    const availableHeight = pdfHeight - 50 // Leave space for header
+    const availableHeight = pdfHeight - 50
     const ratio = Math.min(availableWidth / imgWidth, availableHeight / imgHeight)
     const finalWidth = imgWidth * ratio
     const finalHeight = imgHeight * ratio
