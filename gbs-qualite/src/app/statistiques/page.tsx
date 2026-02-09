@@ -94,7 +94,13 @@ export default function StatistiquesPage() {
   const handleExportPDF = async () => {
     const filename = `statistiques_${currentMonth.replace('-', '_')}.pdf`
     const title = `Statistiques - ${currentMonthName}`
-    const success = await exportToPDF('stats-content', filename, title)
+    const projectFilter = selectedProjet ? `Projet: ${selectedProjet}` : 'Tous projets'
+    const dateFilter = dateDebut && dateFin 
+      ? `du ${new Date(dateDebut).toLocaleDateString('fr-FR')} au ${new Date(dateFin).toLocaleDateString('fr-FR')}`
+      : 'Période actuelle'
+    const additionalInfo = `${projectFilter} | ${dateFilter} | Total agents: ${agentStats.length}`
+    
+    const success = await exportTableToPDF('stats-content', filename, title, additionalInfo)
     if (success) {
       console.log('PDF exporté avec succès')
     } else {
