@@ -6,7 +6,7 @@ import PageHeader from '@/components/PageHeader'
 import { Agent, Ecoute } from '@/lib/supabase'
 import { useAgents, useEcoutes } from '@/hooks/useSupabaseData'
 import { PROJETS } from '@/data/mockData'
-import { exportTableToPDF } from '@/utils/pdfExport'
+import { exportTableToPDF } from '../../utils/pdfExport'
 
 export default function ClassementPage() {
   const { agents, loading: agentsLoading, error: agentsError } = useAgents()
@@ -29,32 +29,39 @@ export default function ClassementPage() {
       
       // Filtrer par dates (sur la date de prise de RDV)
       if (dateDebut) {
-        agentEcoutes = agentEcoutes.filter(e => e.date_prise_rdv >= dateDebut)
+        agentEcoutes = agentEcoutes.filter(e => e.date_rdv >= dateDebut)
       }
+      
       if (dateFin) {
-        agentEcoutes = agentEcoutes.filter(e => e.date_prise_rdv <= dateFin)
+        agentEcoutes = agentEcoutes.filter(e => e.date_rdv <= dateFin)
       }
 
-      // Total de RDV pris (tous les RDV, pas seulement les validés)
       const totalRdv = agentEcoutes.length
-      
-      // RDV Qualité : statut_rdv === 'Validé qualité'
       const rdvQualite = agentEcoutes.filter(e => e.statut_rdv === 'Validé qualité').length
-      
-      // RDV Non Qualité : statut_rdv === '2ème passage' ou 'Annulé'
       const rdvNonQualite = agentEcoutes.filter(e => 
         e.statut_rdv === '2ème passage' || e.statut_rdv === 'Annulé'
       ).length
-      
-      // Taux qualité : (RDV Qualité / Total RDV) * 100
       const tauxQualite = totalRdv > 0 ? (rdvQualite / totalRdv) * 100 : 0
+
+      // Get the main project for this agent (most frequent project in their ecoutes)
+      const projetCounts: Record<string, number> = {}
+      agentEcoutes.forEach(ecoute => {
+        projetCounts[ecoute.projet] = (projetCounts[ecoute.projet] || 0) + 1
+      })
+      
+      const mainProjet = Object.keys(projetCounts).length > 0 
+        ? Object.keys(projetCounts).reduce((a, b) => 
+            projetCounts[a] > projetCounts[b] ? a : b
+          )
+        : 'Non défini'
 
       return {
         agent,
         totalRdv,
         rdvQualite,
         rdvNonQualite,
-        tauxQualite
+        tauxQualite,
+        mainProjet
       }
     })
     .filter(item => item.totalRdv > 0) // Ne garder que les agents avec au moins 1 RDV
@@ -202,7 +209,7 @@ export default function ClassementPage() {
                     </td>
                     <td className="font-medium">{item.agent.nom}</td>
                     <td>
-                      <span className="badge badge-info">{item.agent.projet}</span>
+                      <span className="badge badge-info">{item.mainProjet}</span>
                     </td>
                     <td className="text-center font-semibold">{item.totalRdv}</td>
                     <td className="text-center">
