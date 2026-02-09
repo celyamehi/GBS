@@ -30,7 +30,7 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
     loadingDiv.innerHTML = 'Génération du PDF en cours...'
     document.body.appendChild(loadingDiv)
 
-    // Create a wrapper to control the element during capture
+    // Create a wrapper to control element during capture
     const wrapper = document.createElement('div')
     wrapper.style.cssText = `
       position: absolute;
@@ -103,23 +103,30 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
     // Wait a bit for styles to apply
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Capture the element with Chrome-compatible settings
+    // Capture element with high-quality settings
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 4, // Higher scale for better quality
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
       removeContainer: false,
       foreignObjectRendering: false, // Disable for better Chrome compatibility
-      imageTimeout: 15000,
+      imageTimeout: 20000, // Increased timeout for high quality
+      width: element.scrollWidth * 4, // Higher resolution
+      height: element.scrollHeight * 4, // Higher resolution
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
       onclone: (clonedDoc) => {
-        // Ensure styles are applied in the cloned document
+        // Ensure styles are applied in cloned document
         const clonedElement = clonedDoc.getElementById(elementId)
         if (clonedElement) {
           clonedElement.style.width = '100%'
           clonedElement.style.height = 'auto'
           clonedElement.style.overflow = 'visible'
+          clonedElement.style.transform = 'scale(1)' // Ensure no scaling
         }
       }
     })
@@ -140,8 +147,8 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
       wrapper.parentNode?.removeChild(wrapper)
     }
 
-    // Get image data
-    const imgData = canvas.toDataURL('image/png', 0.95)
+    // Get image data with higher quality
+    const imgData = canvas.toDataURL('image/png', 1.0) // Maximum quality
     
     // Calculate PDF dimensions
     const imgWidth = canvas.width
@@ -192,14 +199,14 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
           0, 0, sliceWidth, sliceHeight
         )
         
-        const sliceData = tempCanvas.toDataURL('image/png', 0.95)
+        const sliceData = tempCanvas.toDataURL('image/png', 1.0)
         pdf.addImage(sliceData, 'PNG', 10, headerHeight, pageWidth - 20, (pageHeight - headerHeight))
       }
       
       yPosition += sliceHeight
     }
 
-    // Save the PDF
+    // Save PDF
     pdf.save(filename)
     
     // Remove loading
@@ -248,7 +255,7 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     loadingDiv.innerHTML = 'Génération du PDF en cours...'
     document.body.appendChild(loadingDiv)
 
-    // Create a wrapper to control the element during capture
+    // Create a wrapper to control element during capture
     const wrapper = document.createElement('div')
     wrapper.style.cssText = `
       position: absolute;
@@ -325,23 +332,30 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
     // Wait a bit for styles to apply
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // Capture the element with Chrome-compatible settings
+    // Capture element with high-quality settings
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 4, // Higher scale for better quality
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
       removeContainer: false,
       foreignObjectRendering: false, // Disable for better Chrome compatibility
-      imageTimeout: 15000,
+      imageTimeout: 20000, // Increased timeout for high quality
+      width: element.scrollWidth * 4, // Higher resolution
+      height: element.scrollHeight * 4, // Higher resolution
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
       onclone: (clonedDoc) => {
-        // Ensure styles are applied in the cloned document
+        // Ensure styles are applied in cloned document
         const clonedElement = clonedDoc.getElementById(tableId)
         if (clonedElement) {
           clonedElement.style.width = '100%'
           clonedElement.style.height = 'auto'
           clonedElement.style.overflow = 'visible'
+          clonedElement.style.transform = 'scale(1)' // Ensure no scaling
         }
       }
     })
@@ -362,8 +376,8 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
       wrapper.parentNode?.removeChild(wrapper)
     }
 
-    // Get image data
-    const imgData = canvas.toDataURL('image/png', 0.95)
+    // Get image data with higher quality
+    const imgData = canvas.toDataURL('image/png', 1.0) // Maximum quality
     
     // Calculate PDF dimensions
     const imgWidth = canvas.width
@@ -421,14 +435,14 @@ export const exportTableToPDF = async (tableId: string, filename: string, title:
           0, 0, sliceWidth, sliceHeight
         )
         
-        const sliceData = tempCanvas.toDataURL('image/png', 0.95)
+        const sliceData = tempCanvas.toDataURL('image/png', 1.0)
         pdf.addImage(sliceData, 'PNG', 10, headerHeight, pageWidth - 20, (pageHeight - headerHeight))
       }
       
       yPosition += sliceHeight
     }
 
-    // Save the PDF
+    // Save PDF
     pdf.save(filename)
     
     // Remove loading
