@@ -84,10 +84,20 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
 
     // High quality capture with better dimensions
     const canvas = await html2canvas(element, {
-      scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
-      logging: false, removeContainer: false, foreignObjectRendering: false,
-      imageTimeout: 20000, width: actualWidth, height: actualHeight,
-      windowWidth: actualWidth, windowHeight: actualHeight,
+      scale: 2, 
+      useCORS: true, 
+      allowTaint: true, 
+      backgroundColor: '#ffffff',
+      logging: false, 
+      removeContainer: false, 
+      foreignObjectRendering: false,
+      imageTimeout: 30000, // Increased timeout
+      width: actualWidth, 
+      height: actualHeight,
+      windowWidth: actualWidth, 
+      windowHeight: actualHeight,
+      scrollX: 0,
+      scrollY: 0,
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.getElementById(elementId)
         if (clonedElement) {
@@ -96,6 +106,7 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
           clonedElement.style.maxWidth = 'none'
           clonedElement.style.height = 'auto'
           clonedElement.style.overflow = 'visible'
+          clonedElement.style.position = 'relative'
           
           // Apply styles to tables in clone
           const tables = clonedElement.querySelectorAll('table')
@@ -105,6 +116,31 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
             htmlTable.style.minWidth = 'max-content'
             htmlTable.style.maxWidth = 'none'
             htmlTable.style.tableLayout = 'auto'
+            htmlTable.style.position = 'relative'
+          })
+          
+          // Apply styles to table rows and cells
+          const rows = clonedElement.querySelectorAll('tr')
+          rows.forEach(row => {
+            const htmlRow = row as HTMLElement
+            htmlRow.style.display = 'table-row'
+            htmlRow.style.visibility = 'visible'
+            htmlRow.style.height = 'auto'
+          })
+          
+          const cells = clonedElement.querySelectorAll('td, th')
+          cells.forEach(cell => {
+            const htmlCell = cell as HTMLElement
+            htmlCell.style.display = 'table-cell'
+            htmlCell.style.visibility = 'visible'
+            htmlCell.style.whiteSpace = 'nowrap'
+            htmlCell.style.padding = '4px 6px'
+            htmlCell.style.border = '1px solid #ddd'
+            htmlCell.style.textAlign = 'left'
+            htmlCell.style.backgroundColor = 'white'
+            htmlCell.style.color = 'black'
+            htmlCell.style.fontSize = '9px'
+            htmlCell.style.verticalAlign = 'top'
           })
         }
       }
