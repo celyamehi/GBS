@@ -67,10 +67,14 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
       }
     })
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-    const actualWidth = element.scrollWidth
-    const actualHeight = element.scrollHeight
+    // Force scroll to ensure all content is visible
+    element.scrollTop = 0
+    element.scrollLeft = 0
+    
+    const actualWidth = Math.max(element.scrollWidth, element.offsetWidth)
+    const actualHeight = Math.max(element.scrollHeight, element.offsetHeight)
 
     // PDF with landscape mode
     const pdf = new jsPDF({
@@ -78,12 +82,32 @@ export const exportToPDF = async (elementId: string, filename: string, title: st
       unit: 'mm', format: 'a4'
     })
 
-    // High quality capture
+    // High quality capture with better dimensions
     const canvas = await html2canvas(element, {
       scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
       logging: false, removeContainer: false, foreignObjectRendering: false,
       imageTimeout: 20000, width: actualWidth, height: actualHeight,
-      windowWidth: actualWidth, windowHeight: actualHeight
+      windowWidth: actualWidth, windowHeight: actualHeight,
+      onclone: (clonedDoc) => {
+        const clonedElement = clonedDoc.getElementById(elementId)
+        if (clonedElement) {
+          clonedElement.style.width = 'max-content'
+          clonedElement.style.minWidth = 'max-content'
+          clonedElement.style.maxWidth = 'none'
+          clonedElement.style.height = 'auto'
+          clonedElement.style.overflow = 'visible'
+          
+          // Apply styles to tables in clone
+          const tables = clonedElement.querySelectorAll('table')
+          tables.forEach(table => {
+            const htmlTable = table as HTMLElement
+            htmlTable.style.width = 'max-content'
+            htmlTable.style.minWidth = 'max-content'
+            htmlTable.style.maxWidth = 'none'
+            htmlTable.style.tableLayout = 'auto'
+          })
+        }
+      }
     })
 
     // Restore styles
