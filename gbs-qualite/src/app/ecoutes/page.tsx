@@ -21,6 +21,7 @@ export default function EcoutesPage() {
   const [filterDateRdvFin, setFilterDateRdvFin] = useState('')
   const [filterDatePriseDebut, setFilterDatePriseDebut] = useState('')
   const [filterDatePriseFin, setFilterDatePriseFin] = useState('')
+  const [filterEstNouveauRdv, setFilterEstNouveauRdv] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEcoute, setEditingEcoute] = useState<Ecoute | null>(null)
   
@@ -38,7 +39,8 @@ export default function EcoutesPage() {
     note_globale: 5,
     remarques: '',
     numero_client: '',
-    nom_client: ''
+    nom_client: '',
+    est_nouveau_rdv: true // true = nouveau RDV, false = relance
   })
 
   const [audioFile, setAudioFile] = useState<File | null>(null)
@@ -61,16 +63,20 @@ export default function EcoutesPage() {
     const matchesAgent = !filterAgent || ecoute.agent_id === filterAgent
     const matchesProjet = !filterProjet || ecoute.projet === filterProjet
     const matchesStatut = !filterStatut || ecoute.statut_rdv === filterStatut
+    const matchesEstNouveauRdv = !filterEstNouveauRdv || 
+      (filterEstNouveauRdv === 'true' && ecoute.est_nouveau_rdv) ||
+      (filterEstNouveauRdv === 'false' && !ecoute.est_nouveau_rdv)
     
     // Filtres par date RDV
     const matchesDateRdvDebut = !filterDateRdvDebut || ecoute.date_rdv >= filterDateRdvDebut
     const matchesDateRdvFin = !filterDateRdvFin || ecoute.date_rdv <= filterDateRdvFin
     
-    // Filtres par date prise RDV
+    // Filtres par date de prise de RDV
     const matchesDatePriseDebut = !filterDatePriseDebut || ecoute.date_prise_rdv >= filterDatePriseDebut
     const matchesDatePriseFin = !filterDatePriseFin || ecoute.date_prise_rdv <= filterDatePriseFin
     
     return matchesSearch && matchesAgent && matchesProjet && matchesStatut && 
+           matchesEstNouveauRdv &&
            matchesDateRdvDebut && matchesDateRdvFin && 
            matchesDatePriseDebut && matchesDatePriseFin
   })
@@ -97,7 +103,8 @@ export default function EcoutesPage() {
         note_globale: ecoute.note_globale,
         remarques: ecoute.remarques || '',
         numero_client: ecoute.numero_client || '',
-        nom_client: ecoute.nom_client || ''
+        nom_client: ecoute.nom_client || '',
+        est_nouveau_rdv: ecoute.est_nouveau_rdv ?? true
       })
       setAudioFile(null)
       // Si l'écoute a un lien audio Supabase, l'utiliser directement
@@ -122,7 +129,8 @@ export default function EcoutesPage() {
         note_globale: 5,
         remarques: '',
         numero_client: '',
-        nom_client: ''
+        nom_client: '',
+        est_nouveau_rdv: true
       })
     }
     setIsModalOpen(true)
@@ -155,6 +163,9 @@ export default function EcoutesPage() {
         agent_id: formData.agent_id,
         projet: formData.projet,
         date_prise_rdv: formData.date_prise_rdv,
+        lien_audio: audioUrl || editingEcoute.lien_audio || null,
+        audio_data: null,
+        audio_name: audioName || editingEcoute.audio_name,
         date_rdv: formData.date_rdv,
         statut_rdv: formData.statut_rdv,
         rdv_qualite: formData.rdv_qualite,
@@ -163,8 +174,7 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
-        lien_audio: audioUrl || editingEcoute.lien_audio || null,
-        audio_name: audioName || editingEcoute.audio_name,
+        est_nouveau_rdv: formData.est_nouveau_rdv,
         criteres: editingEcoute.criteres || {}
       })
     } else {
@@ -185,6 +195,7 @@ export default function EcoutesPage() {
         remarques: formData.remarques || null,
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
+        est_nouveau_rdv: formData.est_nouveau_rdv,
         criteres: {}
       })
     }
@@ -354,6 +365,17 @@ export default function EcoutesPage() {
               placeholder="Date RDV fin"
             />
           </div>
+          <div className="w-48">
+            <select
+              value={filterEstNouveauRdv}
+              onChange={(e) => setFilterEstNouveauRdv(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Tous les RDV</option>
+              <option value="true">Nouveaux RDV</option>
+              <option value="false">Relances</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -366,6 +388,7 @@ export default function EcoutesPage() {
                 <th>Projet</th>
                 <th>Date prise RDV</th>
                 <th>Date RDV</th>
+                <th>Type RDV</th>
                 <th>Numéro client</th>
                 <th>Nom client</th>
                 <th>Statut RDV</th>
@@ -378,7 +401,7 @@ export default function EcoutesPage() {
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={12} className="text-center py-8 text-[#6b7280]">
                     Aucune écoute trouvée
                   </td>
                 </tr>
@@ -389,6 +412,11 @@ export default function EcoutesPage() {
                     <td className="text-[#6b7280]">{ecoute.projet || '-'}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_prise_rdv)}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
+                    <td>
+                      <span className={`badge ${ecoute.est_nouveau_rdv ? 'badge-success' : 'badge-warning'}`}>
+                        {ecoute.est_nouveau_rdv ? 'Nouveau RDV' : 'Relance'}
+                      </span>
+                    </td>
                     <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
                     <td className="text-[#6b7280]">{ecoute.nom_client || '-'}</td>
                     <td>
@@ -604,6 +632,20 @@ export default function EcoutesPage() {
                 className="input-field"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                Type de RDV *
+              </label>
+              <select
+                value={formData.est_nouveau_rdv.toString()}
+                onChange={(e) => setFormData({ ...formData, est_nouveau_rdv: e.target.value === 'true' })}
+                className="input-field"
+                required
+              >
+                <option value="true">Nouveau RDV</option>
+                <option value="false">Relance</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1a1a2e] mb-2">

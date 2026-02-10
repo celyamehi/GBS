@@ -32,6 +32,7 @@ export type Ecoute = {
   remarques: string | null
   numero_client: string | null
   nom_client: string | null
+  est_nouveau_rdv: boolean // true = nouveau RDV, false = relance
   criteres: Record<string, { respecte: boolean; commentaire: string }> | null
   created_at: string
   agent?: Agent

@@ -95,6 +95,7 @@ export const ecoutesService = {
       remarques: e.remarques,
       numero_client: e.numero_client,
       nom_client: e.nom_client,
+      est_nouveau_rdv: (e as any).est_nouveau_rdv ?? true, // Valeur par défaut pour les données existantes
       criteres: {}, // N'existe pas dans la base
       created_at: e.created_at,
       agent: e.agents?.[0] ? {
@@ -159,6 +160,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
+      est_nouveau_rdv: (data as any).est_nouveau_rdv ?? true,
       criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
@@ -224,6 +226,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
+      est_nouveau_rdv: (data as any).est_nouveau_rdv ?? true,
       criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
@@ -305,6 +308,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
+      est_nouveau_rdv: (data as any).est_nouveau_rdv ?? true,
       criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
@@ -367,6 +371,7 @@ export const ecoutesService = {
       remarques: data.remarques,
       numero_client: data.numero_client,
       nom_client: data.nom_client,
+      est_nouveau_rdv: (data as any).est_nouveau_rdv ?? true,
       criteres: {},
       created_at: data.created_at,
       agent: data.agents?.[0] ? {
