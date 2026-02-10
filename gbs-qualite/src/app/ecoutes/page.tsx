@@ -385,7 +385,7 @@ export default function EcoutesPage() {
               Nouvelle écoute
             </button>
             <a 
-              href="/formulaire-ecoute"
+              href="/rdv-formulaire"
               className="btn-secondary flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
