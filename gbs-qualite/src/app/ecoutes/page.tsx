@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio, Trash2, Check } from 'lucide-react'
+import { Plus, Search, Edit2, Eye, ExternalLink, Headphones, Upload, Play, X, FileAudio, Trash2, Check, FileText } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import { Agent, Ecoute, STATUTS_RDV } from '@/lib/supabase'
@@ -376,13 +376,22 @@ export default function EcoutesPage() {
         title="Écoutes / RDV"
         description="Créez et évaluez les écoutes de vos agents"
         action={
-          <button 
-            onClick={() => openModal()}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nouvelle écoute
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => openModal()}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Nouvelle écoute
+            </button>
+            <a 
+              href="/formulaire-ecoute"
+              className="btn-secondary flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Formulaire RDV
+            </a>
+          </div>
         }
       />
 
