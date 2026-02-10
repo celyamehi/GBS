@@ -23,13 +23,32 @@ export default function StatistiquesPage() {
   const activeAgents = agents.filter(a => a.actif)
 
   const filteredEcoutes = useMemo(() => {
-    return ecoutes.filter(ecoute => {
+    const filtered = ecoutes.filter(ecoute => {
       const matchesDateDebut = !dateDebut || ecoute.date_rdv >= dateDebut
       const matchesDateFin = !dateFin || ecoute.date_rdv <= dateFin
       const matchesProjet = !selectedProjet || ecoute.projet === selectedProjet
       const matchesAgent = !selectedAgent || ecoute.agent_id === selectedAgent
       return matchesDateDebut && matchesDateFin && matchesProjet && matchesAgent
     })
+    
+    // Debug: Logger pourquoi aucune donnée parfois
+    if (ecoutes.length > 0 && filtered.length === 0) {
+      console.log('Aucune donnée après filtrage:', {
+        totalEcoutes: ecoutes.length,
+        dateDebut,
+        dateFin,
+        selectedProjet,
+        selectedAgent,
+        ecoutesExemples: ecoutes.slice(0, 3).map(e => ({
+          id: e.id,
+          date_rdv: e.date_rdv,
+          projet: e.projet,
+          agent_id: e.agent_id
+        }))
+      })
+    }
+    
+    return filtered
   }, [ecoutes, dateDebut, dateFin, selectedProjet, selectedAgent])
 
   const currentMonthEcoutes = useMemo(() => {
@@ -39,14 +58,17 @@ export default function StatistiquesPage() {
   }, [ecoutes, currentMonth])
 
   const globalStats = useMemo(() => {
-    const filteredForGlobal = currentMonthEcoutes.filter(ecoute => 
-      !selectedProjet || ecoute.projet === selectedProjet
-    )
+    // Utiliser les mêmes filtres que filteredEcoutes mais pour le mois en cours
+    const currentMonthFiltered = ecoutes.filter(ecoute => {
+      const matchesCurrentMonth = ecoute.date_rdv.substring(0, 7) === currentMonth
+      const matchesProjet = !selectedProjet || ecoute.projet === selectedProjet
+      return matchesCurrentMonth && matchesProjet
+    })
     
-    const totalRdv = filteredForGlobal.length
-    const rdvConfirme = filteredForGlobal.filter(e => e.confirmation === 'Confirmer').length
-    const rdvHonore = filteredForGlobal.filter(e => e.suivi === 'Honore').length
-    const rdvNrp = filteredForGlobal.filter(e => e.suivi === 'NRP').length
+    const totalRdv = currentMonthFiltered.length
+    const rdvConfirme = currentMonthFiltered.filter(e => e.confirmation === 'Confirmer').length
+    const rdvHonore = currentMonthFiltered.filter(e => e.suivi === 'Honore').length
+    const rdvNrp = currentMonthFiltered.filter(e => e.suivi === 'NRP').length
     
     return {
       totalRdv,
@@ -57,7 +79,7 @@ export default function StatistiquesPage() {
       tauxHonore: totalRdv > 0 ? (rdvHonore / totalRdv) * 100 : 0,
       tauxNrp: totalRdv > 0 ? (rdvNrp / totalRdv) * 100 : 0
     }
-  }, [currentMonthEcoutes, selectedProjet])
+  }, [ecoutes, currentMonth, selectedProjet])
 
   const agentStats = useMemo(() => {
     return activeAgents.map(agent => {
@@ -67,6 +89,22 @@ export default function StatistiquesPage() {
       const rdvConfirme = agentEcoutes.filter(e => e.confirmation === 'Confirmer').length
       const rdvHonore = agentEcoutes.filter(e => e.suivi === 'Honore').length
       const rdvNrp = agentEcoutes.filter(e => e.suivi === 'NRP').length
+      
+      // Debug: Logger les données incohérentes
+      if (totalRdv > 0 && (rdvConfirme + rdvHonore + rdvNrp > totalRdv)) {
+        console.warn(`Incohérence pour ${agent.nom}:`, {
+          totalRdv,
+          rdvConfirme,
+          rdvHonore,
+          rdvNrp,
+          somme: rdvConfirme + rdvHonore + rdvNrp,
+          ecoutes: agentEcoutes.map(e => ({
+            id: e.id,
+            confirmation: e.confirmation,
+            suivi: e.suivi
+          }))
+        })
+      }
       
       const tauxConfirme = totalRdv > 0 ? (rdvConfirme / totalRdv) * 100 : 0
       const tauxHonore = totalRdv > 0 ? (rdvHonore / totalRdv) * 100 : 0
