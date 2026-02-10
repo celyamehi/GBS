@@ -33,6 +33,28 @@ export type Ecoute = {
   numero_client: string | null
   nom_client: string | null
   est_nouveau_rdv: boolean // true = nouveau RDV, false = relance
+  
+  // Informations complémentaires RDV
+  adresse: string | null
+  mutuelle_actuelle: string | null
+  prix_actuel: number | null
+  garantie: string | null
+  optique: string | null
+  dentaire: string | null
+  depassements_honoraires: string | null
+  ald: string | null
+  medecine_douce: string | null
+  hospitalisation: string | null
+  appareillage: string | null
+  regime: string | null
+  satisfaction: string | null
+  date_heure_rdv: string | null
+  type_rdv: string | null // ex: Téléphonique
+  age: number | null
+  nombre_personnes: number | null
+  code_postal: string | null
+  adresse_email: string | null
+  
   criteres: Record<string, { respecte: boolean; commentaire: string }> | null
   created_at: string
   agent?: Agent

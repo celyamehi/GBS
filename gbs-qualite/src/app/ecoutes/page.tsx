@@ -40,7 +40,28 @@ export default function EcoutesPage() {
     remarques: '',
     numero_client: '',
     nom_client: '',
-    est_nouveau_rdv: true // true = nouveau RDV, false = relance
+    est_nouveau_rdv: true, // true = nouveau RDV, false = relance
+    
+    // Informations complémentaires RDV
+    adresse: '',
+    mutuelle_actuelle: '',
+    prix_actuel: null as number | null,
+    garantie: '',
+    optique: '',
+    dentaire: '',
+    depassements_honoraires: '',
+    ald: '',
+    medecine_douce: '',
+    hospitalisation: '',
+    appareillage: '',
+    regime: '',
+    satisfaction: '',
+    date_heure_rdv: '',
+    type_rdv: 'Téléphonique', // ex: Téléphonique
+    age: null as number | null,
+    nombre_personnes: null as number | null,
+    code_postal: '',
+    adresse_email: ''
   })
 
   const [audioFile, setAudioFile] = useState<File | null>(null)
@@ -104,7 +125,28 @@ export default function EcoutesPage() {
         remarques: ecoute.remarques || '',
         numero_client: ecoute.numero_client || '',
         nom_client: ecoute.nom_client || '',
-        est_nouveau_rdv: ecoute.est_nouveau_rdv ?? true
+        est_nouveau_rdv: ecoute.est_nouveau_rdv ?? true,
+        
+        // Informations complémentaires RDV
+        adresse: ecoute.adresse || '',
+        mutuelle_actuelle: ecoute.mutuelle_actuelle || '',
+        prix_actuel: ecoute.prix_actuel || null,
+        garantie: ecoute.garantie || '',
+        optique: ecoute.optique || '',
+        dentaire: ecoute.dentaire || '',
+        depassements_honoraires: ecoute.depassements_honoraires || '',
+        ald: ecoute.ald || '',
+        medecine_douce: ecoute.medecine_douce || '',
+        hospitalisation: ecoute.hospitalisation || '',
+        appareillage: ecoute.appareillage || '',
+        regime: ecoute.regime || '',
+        satisfaction: ecoute.satisfaction || '',
+        date_heure_rdv: ecoute.date_heure_rdv || '',
+        type_rdv: ecoute.type_rdv || 'Téléphonique',
+        age: ecoute.age || null,
+        nombre_personnes: ecoute.nombre_personnes || null,
+        code_postal: ecoute.code_postal || '',
+        adresse_email: ecoute.adresse_email || ''
       })
       setAudioFile(null)
       // Si l'écoute a un lien audio Supabase, l'utiliser directement
@@ -130,7 +172,28 @@ export default function EcoutesPage() {
         remarques: '',
         numero_client: '',
         nom_client: '',
-        est_nouveau_rdv: true
+        est_nouveau_rdv: true,
+        
+        // Informations complémentaires RDV
+        adresse: '',
+        mutuelle_actuelle: '',
+        prix_actuel: null,
+        garantie: '',
+        optique: '',
+        dentaire: '',
+        depassements_honoraires: '',
+        ald: '',
+        medecine_douce: '',
+        hospitalisation: '',
+        appareillage: '',
+        regime: '',
+        satisfaction: '',
+        date_heure_rdv: '',
+        type_rdv: 'Téléphonique',
+        age: null,
+        nombre_personnes: null,
+        code_postal: '',
+        adresse_email: ''
       })
     }
     setIsModalOpen(true)
@@ -175,6 +238,28 @@ export default function EcoutesPage() {
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
         est_nouveau_rdv: formData.est_nouveau_rdv,
+        
+        // Informations complémentaires RDV
+        adresse: formData.adresse || null,
+        mutuelle_actuelle: formData.mutuelle_actuelle || null,
+        prix_actuel: formData.prix_actuel || null,
+        garantie: formData.garantie || null,
+        optique: formData.optique || null,
+        dentaire: formData.dentaire || null,
+        depassements_honoraires: formData.depassements_honoraires || null,
+        ald: formData.ald || null,
+        medecine_douce: formData.medecine_douce || null,
+        hospitalisation: formData.hospitalisation || null,
+        appareillage: formData.appareillage || null,
+        regime: formData.regime || null,
+        satisfaction: formData.satisfaction || null,
+        date_heure_rdv: formData.date_heure_rdv || null,
+        type_rdv: formData.type_rdv || null,
+        age: formData.age || null,
+        nombre_personnes: formData.nombre_personnes || null,
+        code_postal: formData.code_postal || null,
+        adresse_email: formData.adresse_email || null,
+        
         criteres: editingEcoute.criteres || {}
       })
     } else {
@@ -196,6 +281,28 @@ export default function EcoutesPage() {
         numero_client: formData.numero_client || null,
         nom_client: formData.nom_client || null,
         est_nouveau_rdv: formData.est_nouveau_rdv,
+        
+        // Informations complémentaires RDV
+        adresse: formData.adresse || null,
+        mutuelle_actuelle: formData.mutuelle_actuelle || null,
+        prix_actuel: formData.prix_actuel || null,
+        garantie: formData.garantie || null,
+        optique: formData.optique || null,
+        dentaire: formData.dentaire || null,
+        depassements_honoraires: formData.depassements_honoraires || null,
+        ald: formData.ald || null,
+        medecine_douce: formData.medecine_douce || null,
+        hospitalisation: formData.hospitalisation || null,
+        appareillage: formData.appareillage || null,
+        regime: formData.regime || null,
+        satisfaction: formData.satisfaction || null,
+        date_heure_rdv: formData.date_heure_rdv || null,
+        type_rdv: formData.type_rdv || null,
+        age: formData.age || null,
+        nombre_personnes: formData.nombre_personnes || null,
+        code_postal: formData.code_postal || null,
+        adresse_email: formData.adresse_email || null,
+        
         criteres: {}
       })
     }
@@ -388,9 +495,27 @@ export default function EcoutesPage() {
                 <th>Projet</th>
                 <th>Date prise RDV</th>
                 <th>Date RDV</th>
+                <th>Heure RDV</th>
                 <th>Type RDV</th>
                 <th>Numéro client</th>
                 <th>Nom client</th>
+                <th>Adresse</th>
+                <th>Mutuelle actuelle</th>
+                <th>Prix actuel</th>
+                <th>Garantie</th>
+                <th>Optique</th>
+                <th>Dentaire</th>
+                <th>Dépassements</th>
+                <th>ALD</th>
+                <th>Médecine douce</th>
+                <th>Hospitalisation</th>
+                <th>Appareillage</th>
+                <th>Régime</th>
+                <th>Satisfaction</th>
+                <th>Âge</th>
+                <th>Nb personnes</th>
+                <th>Code postal</th>
+                <th>Email</th>
                 <th>Statut RDV</th>
                 <th>Note</th>
                 <th>Remarques</th>
@@ -401,7 +526,7 @@ export default function EcoutesPage() {
             <tbody>
               {filteredEcoutes.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="text-center py-8 text-[#6b7280]">
+                  <td colSpan={25} className="text-center py-8 text-[#6b7280]">
                     Aucune écoute trouvée
                   </td>
                 </tr>
@@ -412,6 +537,7 @@ export default function EcoutesPage() {
                     <td className="text-[#6b7280]">{ecoute.projet || '-'}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_prise_rdv)}</td>
                     <td className="text-[#6b7280]">{formatDate(ecoute.date_rdv)}</td>
+                    <td className="text-[#6b7280]">{ecoute.date_heure_rdv || '-'}</td>
                     <td>
                       <span className={`badge ${ecoute.est_nouveau_rdv ? 'badge-success' : 'badge-warning'}`}>
                         {ecoute.est_nouveau_rdv ? 'Nouveau RDV' : 'Relance'}
@@ -419,6 +545,23 @@ export default function EcoutesPage() {
                     </td>
                     <td className="text-[#6b7280]">{ecoute.numero_client || '-'}</td>
                     <td className="text-[#6b7280]">{ecoute.nom_client || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.adresse || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.mutuelle_actuelle || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.prix_actuel ? `${ecoute.prix_actuel}€` : '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.garantie || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.optique || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.dentaire || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.depassements_honoraires || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.ald || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.medecine_douce || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.hospitalisation || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.appareillage || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.regime || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.satisfaction || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.age ? `${ecoute.age} ans` : '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.nombre_personnes || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.code_postal || '-'}</td>
+                    <td className="text-[#6b7280]">{ecoute.adresse_email || '-'}</td>
                     <td>
                       <select
                         value={ecoute.statut_rdv}
