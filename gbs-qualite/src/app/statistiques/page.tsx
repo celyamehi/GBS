@@ -16,6 +16,7 @@ export default function StatistiquesPage() {
   const [dateFin, setDateFin] = useState('')
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null)
   const [selectedProjet, setSelectedProjet] = useState<string>('')
+  const [selectedTypeRdv, setSelectedTypeRdv] = useState<string>('')
 
   const currentMonth = new Date().toISOString().substring(0, 7)
   const currentMonthName = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -28,7 +29,10 @@ export default function StatistiquesPage() {
       const matchesDateFin = !dateFin || ecoute.date_rdv <= dateFin
       const matchesProjet = !selectedProjet || ecoute.projet === selectedProjet
       const matchesAgent = !selectedAgent || ecoute.agent_id === selectedAgent
-      return matchesDateDebut && matchesDateFin && matchesProjet && matchesAgent
+      const matchesTypeRdv = !selectedTypeRdv || 
+        (selectedTypeRdv === 'true' && ecoute.est_nouveau_rdv) ||
+        (selectedTypeRdv === 'false' && !ecoute.est_nouveau_rdv)
+      return matchesDateDebut && matchesDateFin && matchesProjet && matchesAgent && matchesTypeRdv
     })
     
     // Debug: Logger pourquoi aucune donnée parfois
@@ -49,7 +53,7 @@ export default function StatistiquesPage() {
     }
     
     return filtered
-  }, [ecoutes, dateDebut, dateFin, selectedProjet, selectedAgent])
+  }, [ecoutes, dateDebut, dateFin, selectedProjet, selectedAgent, selectedTypeRdv])
 
   const currentMonthEcoutes = useMemo(() => {
     return ecoutes.filter(ecoute => 
@@ -245,9 +249,21 @@ export default function StatistiquesPage() {
               ))}
             </select>
           </div>
+          <div className="w-48">
+            <label className="block text-sm font-medium text-[#6b7280] mb-2">Type RDV</label>
+            <select
+              value={selectedTypeRdv}
+              onChange={(e) => setSelectedTypeRdv(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Tous les RDV</option>
+              <option value="true">Nouveaux RDV</option>
+              <option value="false">Relances</option>
+            </select>
+          </div>
         </div>
         <p className="text-sm text-[#6b7280] mt-3">
-          Les filtres de date, projet et agent s'appliquent à la vue par agent. La vue globale affiche les stats du mois en cours.
+          Les filtres de date, projet, agent et type RDV s'appliquent à la vue par agent. La vue globale affiche les stats du mois en cours.
         </p>
       </div>
 
