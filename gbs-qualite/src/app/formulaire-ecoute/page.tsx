@@ -210,15 +210,13 @@ export default function FormulaireEcoutePage() {
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Projet
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.projet}
                     onChange={(e) => handleInputChange('projet', e.target.value)}
                     className="input-field"
-                  >
-                    {PROJETS.map(projet => (
-                      <option key={projet} value={projet}>{projet}</option>
-                    ))}
-                  </select>
+                    placeholder="Nom du projet"
+                  />
                 </div>
               </div>
             </div>
@@ -257,15 +255,13 @@ export default function FormulaireEcoutePage() {
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Type RDV
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.type_rdv}
                     onChange={(e) => handleInputChange('type_rdv', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="Téléphonique">Téléphonique</option>
-                    <option value="Visioconférence">Visioconférence</option>
-                    <option value="Physique">Physique</option>
-                  </select>
+                    placeholder="Type de rendez-vous"
+                  />
                 </div>
               </div>
             </div>
@@ -406,64 +402,49 @@ export default function FormulaireEcoutePage() {
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Garantie souhaitée
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.garantie}
                     onChange={(e) => handleInputChange('garantie', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Essentielle">Essentielle</option>
-                    <option value="Confort">Confort</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Tous risques">Tous risques</option>
-                  </select>
+                    placeholder="Garantie souhaitée"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Optique
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.optique}
                     onChange={(e) => handleInputChange('optique', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Aucune">Aucune</option>
-                    <option value="Basique">Basique</option>
-                    <option value="Standard">Standard</option>
-                    <option value="Haut de gamme">Haut de gamme</option>
-                  </select>
+                    placeholder="Couverture optique"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Dentaire
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.dentaire}
                     onChange={(e) => handleInputChange('dentaire', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Aucune">Aucune</option>
-                    <option value="Basique">Basique</option>
-                    <option value="Standard">Standard</option>
-                    <option value="Complète">Complète</option>
-                  </select>
+                    placeholder="Couverture dentaire"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Dépassements honoraires
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.depassements_honoraires}
                     onChange={(e) => handleInputChange('depassements_honoraires', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Non">Non</option>
-                    <option value="Oui">Oui</option>
-                    <option value="Partiel">Partiel</option>
-                  </select>
+                    placeholder="Dépassements honoraires"
+                  />
                 </div>
               </div>
             </div>
@@ -479,96 +460,73 @@ export default function FormulaireEcoutePage() {
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     ALD
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.ald}
                     onChange={(e) => handleInputChange('ald', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Non">Non</option>
-                    <option value="Oui">Oui</option>
-                  </select>
+                    placeholder="Affection Longue Durée"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Médecine douce
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.medecine_douce}
                     onChange={(e) => handleInputChange('medecine_douce', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Aucune">Aucune</option>
-                    <option value="Ostéopathie">Ostéopathie</option>
-                    <option value="Acupuncture">Acupuncture</option>
-                    <option value="Homéopathie">Homéopathie</option>
-                    <option value="Toutes">Toutes</option>
-                  </select>
+                    placeholder="Médecine douce"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Hospitalisation
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.hospitalisation}
                     onChange={(e) => handleInputChange('hospitalisation', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Public">Public</option>
-                    <option value="Privé">Privé</option>
-                    <option value="Les deux">Les deux</option>
-                  </select>
+                    placeholder="Type d'hospitalisation"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Appareillage
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.appareillage}
                     onChange={(e) => handleInputChange('appareillage', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Aucun">Aucun</option>
-                    <option value="Auditif">Auditif</option>
-                    <option value="Optique">Optique</option>
-                    <option value="Médical">Médical</option>
-                  </select>
+                    placeholder="Type d'appareillage"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Régime
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.regime}
                     onChange={(e) => handleInputChange('regime', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Général">Général</option>
-                    <option value="Agriculteur">Agriculteur</option>
-                    <option value="Artisan">Artisan</option>
-                    <option value="Fonctionnaire">Fonctionnaire</option>
-                  </select>
+                    placeholder="Régime sécurité sociale"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#6b7280] mb-2">
                     Satisfaction actuelle
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.satisfaction}
                     onChange={(e) => handleInputChange('satisfaction', e.target.value)}
                     className="input-field"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="Très satisfait">Très satisfait</option>
-                    <option value="Satisfait">Satisfait</option>
-                    <option value="Neutre">Neutre</option>
-                    <option value="Insatisfait">Insatisfait</option>
-                    <option value="Très insatisfait">Très insatisfait</option>
-                  </select>
+                    placeholder="Niveau de satisfaction"
+                  />
                 </div>
               </div>
             </div>
