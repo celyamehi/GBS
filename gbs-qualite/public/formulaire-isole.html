@@ -119,7 +119,9 @@
                                 <label class="block text-sm font-medium text-[#6b7280] mb-2">
                                     Projet
                                 </label>
-                                <input type="text" id="projet" class="input-field" placeholder="Nom du projet" value="GBS Conseille">
+                                <select id="projet" class="input-field">
+                                    <option value="">Chargement...</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -340,34 +342,69 @@
     <script>
         // Configuration Supabase
         const { createClient } = supabase;
-        const supabaseUrl = 'https://your-project.supabase.co';
-        const supabaseKey = 'your-anon-key';
+        const supabaseUrl = 'https://gbs-qualite.vercel.app';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdicy1xdWFsaXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1MjE1NzAsImV4cCI6MjA1MjA5NzU3MH0.Y6B8JQ4Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q';
         
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Charger les agents
-        async function loadAgents() {
+        // Charger les agents et projets
+        async function loadData() {
             try {
-                const { data, error } = await supabase
+                // Charger les agents
+                const { data: agents, error: agentsError } = await supabase
                     .from('agents')
                     .select('*')
                     .eq('actif', true)
                     .order('nom');
 
-                if (error) throw error;
+                if (agentsError) throw agentsError;
                 
-                const select = document.getElementById('agent_id');
-                select.innerHTML = '<option value="">Sélectionner un agent</option>';
+                const agentSelect = document.getElementById('agent_id');
+                agentSelect.innerHTML = '<option value="">Sélectionner un agent</option>';
                 
-                data.forEach(agent => {
+                agents.forEach(agent => {
                     const option = document.createElement('option');
                     option.value = agent.id;
                     option.textContent = agent.nom;
-                    select.appendChild(option);
+                    agentSelect.appendChild(option);
                 });
+
+                // Charger les projets depuis les écoutes existantes
+                const { data: projets, error: projetsError } = await supabase
+                    .from('ecoutes')
+                    .select('projet')
+                    .not('projet', 'is', null)
+                    .not('projet', 'eq', '');
+
+                if (projetsError) throw projetsError;
+                
+                // Extraire les projets uniques
+                const projetsUniques = [...new Set(projets.map(p => p.projet))];
+                
+                const projetSelect = document.getElementById('projet');
+                projetSelect.innerHTML = '<option value="">Sélectionner un projet</option>';
+                
+                projetsUniques.forEach(projet => {
+                    const option = document.createElement('option');
+                    option.value = projet;
+                    option.textContent = projet;
+                    projetSelect.appendChild(option);
+                });
+
+                // Ajouter "GBS Conseille" comme valeur par défaut si pas déjà présent
+                if (!projetsUniques.includes('GBS Conseille')) {
+                    const option = document.createElement('option');
+                    option.value = 'GBS Conseille';
+                    option.textContent = 'GBS Conseille';
+                    projetSelect.appendChild(option);
+                }
+                
+                // Sélectionner "GBS Conseille" par défaut
+                projetSelect.value = 'GBS Conseille';
+
             } catch (error) {
-                console.error('Erreur lors du chargement des agents:', error);
-                showMessage('Erreur lors du chargement des agents', 'error');
+                console.error('Erreur lors du chargement des données:', error);
+                showMessage('Erreur lors du chargement des données', 'error');
             }
         }
 
@@ -452,6 +489,7 @@
         // Réinitialiser le formulaire
         function resetForm() {
             document.getElementById('rdvForm').reset();
+            // Garder les valeurs par défaut
             document.getElementById('projet').value = 'GBS Conseille';
             document.getElementById('type_rdv').value = 'Téléphonique';
             document.getElementById('date_prise_rdv').value = new Date().toISOString().split('T')[0];
@@ -473,7 +511,7 @@
 
         // Initialiser
         document.addEventListener('DOMContentLoaded', function() {
-            loadAgents();
+            loadData();
             
             // Initialiser la date du jour
             document.getElementById('date_prise_rdv').value = new Date().toISOString().split('T')[0];
