@@ -383,6 +383,7 @@
                 const projetSelect = document.getElementById('projet');
                 projetSelect.innerHTML = '<option value="">Sélectionner un projet</option>';
                 
+                // Ajouter les projets trouvés
                 projetsUniques.forEach(projet => {
                     const option = document.createElement('option');
                     option.value = projet;
@@ -390,13 +391,16 @@
                     projetSelect.appendChild(option);
                 });
 
-                // Ajouter "GBS Conseille" comme valeur par défaut si pas déjà présent
-                if (!projetsUniques.includes('GBS Conseille')) {
-                    const option = document.createElement('option');
-                    option.value = 'GBS Conseille';
-                    option.textContent = 'GBS Conseille';
-                    projetSelect.appendChild(option);
-                }
+                // Ajouter les projets fixes connus
+                const projetsFixes = ['GBS Conseille', 'CAPSICOM'];
+                projetsFixes.forEach(projet => {
+                    if (!projetsUniques.includes(projet)) {
+                        const option = document.createElement('option');
+                        option.value = projet;
+                        option.textContent = projet;
+                        projetSelect.appendChild(option);
+                    }
+                });
                 
                 // Sélectionner "GBS Conseille" par défaut
                 projetSelect.value = 'GBS Conseille';
