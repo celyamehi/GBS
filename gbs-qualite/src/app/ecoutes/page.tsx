@@ -865,6 +865,250 @@ export default function EcoutesPage() {
             </div>
           </div>
 
+          {/* Informations complémentaires RDV */}
+          <div className="border-t border-[#e8e8e8] pt-4">
+            <h3 className="text-lg font-semibold text-[#1a1a2e] mb-4">Informations complémentaires RDV</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Adresse
+                </label>
+                <input
+                  type="text"
+                  value={formData.adresse}
+                  onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+                  className="input-field"
+                  placeholder="Adresse du client"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Mutuelle actuelle
+                </label>
+                <input
+                  type="text"
+                  value={formData.mutuelle_actuelle}
+                  onChange={(e) => setFormData({ ...formData, mutuelle_actuelle: e.target.value })}
+                  className="input-field"
+                  placeholder="Mutuelle actuelle"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Prix actuel (€)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.prix_actuel || ''}
+                  onChange={(e) => setFormData({ ...formData, prix_actuel: e.target.value ? parseFloat(e.target.value) : null })}
+                  className="input-field"
+                  placeholder="45.50"
+                  min="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Garantie souhaitée
+                </label>
+                <input
+                  type="text"
+                  value={formData.garantie}
+                  onChange={(e) => setFormData({ ...formData, garantie: e.target.value })}
+                  className="input-field"
+                  placeholder="Garantie souhaitée"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Optique
+                </label>
+                <input
+                  type="text"
+                  value={formData.optique}
+                  onChange={(e) => setFormData({ ...formData, optique: e.target.value })}
+                  className="input-field"
+                  placeholder="Couverture optique"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Dentaire
+                </label>
+                <input
+                  type="text"
+                  value={formData.dentaire}
+                  onChange={(e) => setFormData({ ...formData, dentaire: e.target.value })}
+                  className="input-field"
+                  placeholder="Couverture dentaire"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Dépassements honoraires
+                </label>
+                <input
+                  type="text"
+                  value={formData.depassements_honoraires}
+                  onChange={(e) => setFormData({ ...formData, depassements_honoraires: e.target.value })}
+                  className="input-field"
+                  placeholder="Dépassements honoraires"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  ALD
+                </label>
+                <input
+                  type="text"
+                  value={formData.ald}
+                  onChange={(e) => setFormData({ ...formData, ald: e.target.value })}
+                  className="input-field"
+                  placeholder="Affection Longue Durée"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Médecine douce
+                </label>
+                <input
+                  type="text"
+                  value={formData.medecine_douce}
+                  onChange={(e) => setFormData({ ...formData, medecine_douce: e.target.value })}
+                  className="input-field"
+                  placeholder="Médecine douce"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Hospitalisation
+                </label>
+                <input
+                  type="text"
+                  value={formData.hospitalisation}
+                  onChange={(e) => setFormData({ ...formData, hospitalisation: e.target.value })}
+                  className="input-field"
+                  placeholder="Type d'hospitalisation"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Appareillage
+                </label>
+                <input
+                  type="text"
+                  value={formData.appareillage}
+                  onChange={(e) => setFormData({ ...formData, appareillage: e.target.value })}
+                  className="input-field"
+                  placeholder="Type d'appareillage"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Régime
+                </label>
+                <input
+                  type="text"
+                  value={formData.regime}
+                  onChange={(e) => setFormData({ ...formData, regime: e.target.value })}
+                  className="input-field"
+                  placeholder="Régime sécurité sociale"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Satisfaction actuelle
+                </label>
+                <input
+                  type="text"
+                  value={formData.satisfaction}
+                  onChange={(e) => setFormData({ ...formData, satisfaction: e.target.value })}
+                  className="input-field"
+                  placeholder="Niveau de satisfaction"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Heure RDV
+                </label>
+                <input
+                  type="time"
+                  value={formData.date_heure_rdv}
+                  onChange={(e) => setFormData({ ...formData, date_heure_rdv: e.target.value })}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Type RDV
+                </label>
+                <input
+                  type="text"
+                  value={formData.type_rdv}
+                  onChange={(e) => setFormData({ ...formData, type_rdv: e.target.value })}
+                  className="input-field"
+                  placeholder="Type de rendez-vous"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Âge
+                </label>
+                <input
+                  type="number"
+                  value={formData.age || ''}
+                  onChange={(e) => setFormData({ ...formData, age: e.target.value ? parseInt(e.target.value) : null })}
+                  className="input-field"
+                  placeholder="35"
+                  min="0"
+                  max="120"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Nombre de personnes
+                </label>
+                <input
+                  type="number"
+                  value={formData.nombre_personnes || ''}
+                  onChange={(e) => setFormData({ ...formData, nombre_personnes: e.target.value ? parseInt(e.target.value) : null })}
+                  className="input-field"
+                  placeholder="1"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Code postal
+                </label>
+                <input
+                  type="text"
+                  value={formData.code_postal}
+                  onChange={(e) => setFormData({ ...formData, code_postal: e.target.value })}
+                  className="input-field"
+                  placeholder="75001"
+                  maxLength={5}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={formData.adresse_email}
+                  onChange={(e) => setFormData({ ...formData, adresse_email: e.target.value })}
+                  className="input-field"
+                  placeholder="email@exemple.com"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
               Remarques qualiticienne
