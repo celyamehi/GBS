@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulaire de Prise de RDV - GBS Qualité</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -341,17 +340,17 @@
 
     <script>
         // Configuration Supabase
-        const { createClient } = supabase;
+        const { createClient } = window.supabase;
         const supabaseUrl = 'https://gbs-qualite.vercel.app';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdicy1xdWFsaXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1MjE1NzAsImV4cCI6MjA1MjA5NzU3MH0.Y6B8JQ4Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q';
         
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
         // Charger les agents et projets
         async function loadData() {
             try {
                 // Charger les agents
-                const { data: agents, error: agentsError } = await supabase
+                const { data: agents, error: agentsError } = await supabaseClient
                     .from('agents')
                     .select('*')
                     .eq('actif', true)
@@ -370,7 +369,7 @@
                 });
 
                 // Charger les projets depuis les écoutes existantes
-                const { data: projets, error: projetsError } = await supabase
+                const { data: projets, error: projetsError } = await supabaseClient
                     .from('ecoutes')
                     .select('projet')
                     .not('projet', 'is', null)
@@ -468,7 +467,7 @@
                     criteres: {}
                 };
 
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('ecoutes')
                     .insert([formData]);
 
