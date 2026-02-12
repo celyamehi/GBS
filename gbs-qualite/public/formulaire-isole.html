@@ -442,7 +442,6 @@
                     remarques: document.getElementById('remarques').value || null,
                     numero_client: document.getElementById('numero_client').value || null,
                     nom_client: nomClient || null,
-                    est_nouveau_rdv: true,
                     
                     // Informations complémentaires RDV
                     adresse: document.getElementById('adresse').value || null,
@@ -463,8 +462,7 @@
                     age: parseInt(document.getElementById('age').value) || null,
                     nombre_personnes: parseInt(document.getElementById('nombre_personnes').value) || null,
                     code_postal: document.getElementById('code_postal').value || null,
-                    adresse_email: document.getElementById('adresse_email').value || null,
-                    criteres: {}
+                    adresse_email: document.getElementById('adresse_email').value || null
                 };
 
                 const { error } = await supabaseClient
