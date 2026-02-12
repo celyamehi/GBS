@@ -788,7 +788,7 @@ export default function EcoutesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
-                Type de RDV *
+                Type de contact *
               </label>
               <select
                 value={formData.est_nouveau_rdv.toString()}
@@ -1044,14 +1044,14 @@ export default function EcoutesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#1a1a2e] mb-2">
-                  Type RDV
+                  Type de RDV
                 </label>
                 <input
                   type="text"
                   value={formData.type_rdv}
                   onChange={(e) => setFormData({ ...formData, type_rdv: e.target.value })}
                   className="input-field"
-                  placeholder="Type de rendez-vous"
+                  placeholder="ex: Téléphonique, Physique, Visioconférence"
                 />
               </div>
               <div>
