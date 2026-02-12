@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS projets (
 -- Insertion des projets de base
 INSERT INTO projets (nom, description, actif) VALUES
   ('GBS Conseille', 'Projet principal de conseil en mutuelle', true),
-  ('CAPSICOM', 'Projet CAPSICOM', true)
+  ('CAPSICOM', 'Projet CAPSICOM', true),
+  ('CAP Prevoyance', 'Projet CAP Prevoyance', true)
 ON CONFLICT (nom) DO NOTHING;
 
 -- Création d'un index pour optimiser les performances
