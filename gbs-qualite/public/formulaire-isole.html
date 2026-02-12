@@ -623,9 +623,9 @@
                     projetSelect.appendChild(option);
                 });
 
-                // Ajouter les projets fixes connus (toujours disponibles)
-                const projetsFixes = ['GBS Conseille', 'CAPSICOM', 'CAP Prevoyance'];
-                projetsFixes.forEach(projet => {
+                // Ajouter les projets fixes de base (uniquement s'ils ne sont pas déjà dans la base)
+                const projetsFixesBase = ['GBS Conseille', 'CAPSICOM'];
+                projetsFixesBase.forEach(projet => {
                     if (!projetsUniques.includes(projet)) {
                         const option = document.createElement('option');
                         option.value = projet;
