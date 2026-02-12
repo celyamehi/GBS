@@ -385,7 +385,8 @@ export default function EcoutesPage() {
               Nouvelle écoute
             </button>
             <a 
-              href="/formulaire-rdv"
+              href="/formulaire-isole.html"
+              target="_blank"
               className="btn-secondary flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
