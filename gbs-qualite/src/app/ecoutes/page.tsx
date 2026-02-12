@@ -25,6 +25,10 @@ export default function EcoutesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEcoute, setEditingEcoute] = useState<Ecoute | null>(null)
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 5
+  
   const [formData, setFormData] = useState({
     agent_id: '',
     projet: 'GBS Conseille',
@@ -101,6 +105,12 @@ export default function EcoutesPage() {
            matchesDateRdvDebut && matchesDateRdvFin && 
            matchesDatePriseDebut && matchesDatePriseFin
   })
+
+  // Logique de pagination
+  const totalPages = Math.ceil(filteredEcoutes.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentEcoutes = filteredEcoutes.slice(startIndex, endIndex)
 
   const openModal = (ecoute?: Ecoute) => {
     // Reset audio states
@@ -496,9 +506,9 @@ export default function EcoutesPage() {
         </div>
       </div>
 
-      <div className="card relative">
-        {/* Navigation fixe sur le côté droit du tableau */}
-        <div className="fixed-nav">
+      <div className="card">
+        {/* Navigation en haut du tableau */}
+        <div className="top-nav">
           <h4 className="nav-title">Navigation rapide</h4>
           <nav className="nav-links">
             <Link href="/" className="nav-link">
@@ -558,7 +568,7 @@ export default function EcoutesPage() {
           </nav>
         </div>
 
-        <div className="table-container pr-20">
+        <div className="table-container">
           <table>
             <thead>
               <tr>
@@ -595,14 +605,14 @@ export default function EcoutesPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredEcoutes.length === 0 ? (
+              {currentEcoutes.length === 0 ? (
                 <tr>
                   <td colSpan={25} className="text-center py-8 text-[#6b7280]">
                     Aucune écoute trouvée
                   </td>
                 </tr>
               ) : (
-                filteredEcoutes.map(ecoute => (
+                currentEcoutes.map(ecoute => (
                   <tr key={ecoute.id}>
                     <td className="font-medium">{getAgentName(ecoute.agent_id)}</td>
                     <td className="text-[#6b7280]">{ecoute.projet || '-'}</td>
@@ -707,6 +717,50 @@ export default function EcoutesPage() {
               )}
             </tbody>
           </table>
+        
+        {/* Contrôles de pagination */}
+        {totalPages > 1 && (
+          <div className="pagination-controls">
+            <div className="pagination-info">
+              Affichage de {startIndex + 1} à {Math.min(endIndex, filteredEcoutes.length)} sur {filteredEcoutes.length} écoutes
+            </div>
+            <div className="pagination-buttons">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="pagination-btn"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                Précédent
+              </button>
+              
+              <div className="pagination-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="pagination-btn"
+              >
+                Suivant
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
         </div>
       </div>
 
