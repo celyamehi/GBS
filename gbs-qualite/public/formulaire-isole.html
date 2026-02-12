@@ -368,17 +368,34 @@
                     agentSelect.appendChild(option);
                 });
 
-                // Charger les projets depuis les écoutes existantes
-                const { data: projets, error: projetsError } = await supabaseClient
-                    .from('ecoutes')
-                    .select('projet')
-                    .not('projet', 'is', null)
-                    .not('projet', 'eq', '');
-
-                if (projetsError) throw projetsError;
+                // Essayer de charger les projets depuis une table projets, sinon depuis les écoutes
+                let projetsUniques = [];
                 
-                // Extraire les projets uniques
-                const projetsUniques = [...new Set(projets.map(p => p.projet))];
+                try {
+                    // Essayer depuis la table projets
+                    const { data: projetsTable, error: projetsTableError } = await supabaseClient
+                        .from('projets')
+                        .select('nom, actif')
+                        .eq('actif', true)
+                        .order('nom');
+
+                    if (!projetsTableError && projetsTable) {
+                        projetsUniques = projetsTable.map(p => p.nom);
+                    } else {
+                        // Si la table projets n'existe pas, charger depuis les écoutes
+                        const { data: projetsEcoutes, error: projetsEcoutesError } = await supabaseClient
+                            .from('ecoutes')
+                            .select('projet')
+                            .not('projet', 'is', null)
+                            .not('projet', 'eq', '');
+
+                        if (!projetsEcoutesError && projetsEcoutes) {
+                            projetsUniques = [...new Set(projetsEcoutes.map(p => p.projet))];
+                        }
+                    }
+                } catch (error) {
+                    console.log('Table projets non trouvée, utilisation des écoutes...');
+                }
                 
                 const projetSelect = document.getElementById('projet');
                 projetSelect.innerHTML = '<option value="">Sélectionner un projet</option>';
@@ -391,7 +408,7 @@
                     projetSelect.appendChild(option);
                 });
 
-                // Ajouter les projets fixes connus
+                // Ajouter les projets fixes connus (toujours disponibles)
                 const projetsFixes = ['GBS Conseille', 'CAPSICOM'];
                 projetsFixes.forEach(projet => {
                     if (!projetsUniques.includes(projet)) {
